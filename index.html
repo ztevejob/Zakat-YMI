@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Posko Penerimaan ZIS (Transparent Summary)</title>
+    <title>Pencatatan ZIS - Yayasan Masjid Istiqbal</title>
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
     <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script defer src="[https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js](https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js)"></script>
     <!-- SheetJS (XLSX) untuk Export Excel Profesional -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="[https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js](https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js)"></script>
     <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)">
     <script>
         tailwind.config = {
             theme: {
@@ -37,8 +37,8 @@
                     <i class="fa-solid fa-mosque text-2xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold tracking-wide">Posko ZIS Ramadan</h1>
-                    <p class="text-xs text-slate-400">Pencatatan Kolektif Amil Zakat & Infak</p>
+                    <h1 class="text-xl font-bold tracking-wide">Posko ZIS Yayasan Masjid Istiqbal</h1>
+                    <p class="text-xs text-slate-400">Pencatatan Kolektif Amil Zakat, Infak & Sedekah</p>
                 </div>
             </div>
             <div class="flex items-center gap-3">
@@ -164,7 +164,7 @@
                         </div>
                     </div>
 
-                    <!-- Pengaturan Khusus Zakat Fitrah (Auto Kalkulasi) -->
+                    <!-- Pengaturan Khusus Zakat Fitrah (Auto Kalkulasi Rp50.000 & 3,5 Kg) -->
                     <template x-if="form.jenis === 'Zakat Fitrah'">
                         <div class="space-y-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
                             <div class="grid grid-cols-2 gap-3">
@@ -283,17 +283,18 @@
     </main>
 
     <!-- Footer -->
-    <footer class="border-t border-slate-800 text-center py-4 text-xs text-slate-500 mt-12">
-        Aplikasi Posko ZIS &bull; Data tersimpan langsung di Google Sheets secara real-time
+    <footer class="border-t border-slate-800 text-center py-4 text-xs text-slate-500 mt-12 space-y-1">
+        <p>Yayasan Masjid Istiqbal &bull; Data tersimpan langsung di Google Sheets secara real-time</p>
+        <p class="text-slate-400 font-medium">Created by Novi Riyanto</p>
     </footer>
 
     <!-- Alpine.js Logic -->
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwQDvoVQZvyZDXDCfKTI34oTw4r9tH1vOHBybXwhFeMOV0v5lPDhLVUoFLkMJR-uy_U/exec";
+        const WEB_APP_URL = "[https://script.google.com/macros/s/AKfycbwQDvoVQZvyZDXDCfKTI34oTw4r9tH1vOHBybXwhFeMOV0v5lPDhLVUoFLkMJR-uy_U/exec](https://script.google.com/macros/s/AKfycbwQDvoVQZvyZDXDCfKTI34oTw4r9tH1vOHBybXwhFeMOV0v5lPDhLVUoFLkMJR-uy_U/exec)";
 
         function zakatApp() {
             return {
-                transactions: JSON.parse(localStorage.getItem('zakat_posko_cache_10col_auto_trans')) || [],
+                transactions: JSON.parse(localStorage.getItem('zakat_posko_cache_istiqbal')) || [],
                 search: '',
                 filterJenis: '',
                 filterPetugas: '',
@@ -374,7 +375,7 @@
                             id: Date.now(),
                             ...payload
                         });
-                        localStorage.setItem('zakat_posko_cache_10col_auto_trans', JSON.stringify(this.transactions));
+                        localStorage.setItem('zakat_posko_cache_istiqbal', JSON.stringify(this.transactions));
 
                         const currentPetugas = this.form.petugas;
                         this.form = {
@@ -413,7 +414,7 @@
                         : this.formatRupiah(item.nominal);
 
                     let pesan = `*Bismillah, Terima Kasih*%0a%0a` +
-                                `Telah diterima setoran ZIS dengan rincian berikut:%0a%0a` +
+                                `Telah diterima setoran ZIS di Yayasan Masjid Istiqbal dengan rincian:%0a%0a` +
                                 `🏛️ *BUKTI PENERIMAAN ZIS*%0a` +
                                 `📅 Waktu: ${item.timestamp}%0a` +
                                 `👤 Muzakki: *${item.nama}*%0a` +
@@ -424,9 +425,9 @@
                                 `📝 Keterangan: ${item.keterangan}%0a` +
                                 `👨‍💼 Petugas Amil: ${item.petugas}%0a%0a` +
                                 `🙏 _"Semoga harta dan jiwa Bapak/Ibu senantiasa diberkahi, dilipatgandakan pahalanya, dan mensucikan penghasilan kita. Aamiin."_%0a%0a` +
-                                `---%0a*Posko ZIS Ramadan*`;
+                                `---%0a*Yayasan Masjid Istiqbal*`;
 
-                    let waUrl = `https://wa.me/${phoneClean}?text=${pesan}`;
+                    let waUrl = `[https://wa.me/$](https://wa.me/$){phoneClean}?text=${pesan}`;
                     window.open(waUrl, '_blank');
                 },
 
@@ -502,7 +503,7 @@
                     let workbook = XLSX.utils.book_new();
                     XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap ZIS");
 
-                    XLSX.writeFile(workbook, "rekap_penerimaan_zis_posko.xlsx");
+                    XLSX.writeFile(workbook, "rekap_zis_yayasan_masjid_istiqbal.xlsx");
                 }
             }
         }
