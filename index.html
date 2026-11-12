@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,19 +36,7 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-darkBg text-slate-100 min-h-screen font-sans antialiased pb-24 md:pb-8" x-data="zakatApp()" x-init="fetchDataFromServer()">
-
-    <!-- Loading Bar (Gauge Bar Loading Fetch Data) -->
-    <div class="fixed top-0 left-0 right-0 z-50 h-1.5 bg-transparent overflow-hidden" x-show="loadingData" x-transition.opacity>
-        <div class="h-full bg-gradient-to-r from-purple-500 via-emerald-400 to-cyan-400 animate-pulse w-full origin-left transform" style="animation: indeterminate 1.5s infinite linear;"></div>
-    </div>
-    <style>
-        @keyframes indeterminate {
-            0% { transform: translateX(-100%); }
-            50% { transform: translateX(0%); }
-            100% { transform: translateX(100%); }
-        }
-    </style>
+<body class="bg-darkBg text-slate-100 min-h-screen font-sans antialiased pb-28 md:pb-12" x-data="zakatApp()" x-init="initApp()">
 
     <!-- Header / Navbar -->
     <header class="bg-cardBg border-b border-slate-800 sticky top-0 z-40 shadow-lg">
@@ -62,90 +50,101 @@
                     <p class="text-[11px] md:text-xs text-slate-400 truncate">Pencatatan Kolektif Amil Zakat & Sedekah</p>
                 </div>
             </div>
-            <div class="hidden md:flex items-center gap-3">
-                <span class="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-accentGreen border border-emerald-500/20 font-medium flex items-center gap-1.5">
+            <div class="flex items-center gap-3">
+                <span class="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-accentGreen border border-emerald-500/20 font-medium hidden sm:flex items-center gap-1.5">
                     <i class="fa-solid fa-cloud-arrow-up" :class="{'animate-spin': loadingData}"></i> 
                     <span x-text="loadingData ? 'Memuat Server...' : 'Server Connected'"></span>
                 </span>
                 <button @click="fetchDataFromServer" title="Ambil data terbaru dari server" class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 px-3 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2">
-                    <i class="fa-solid fa-rotate" :class="{'animate-spin': loadingData}"></i> Refresh
+                    <i class="fa-solid fa-rotate" :class="{'animate-spin': loadingData}"></i> <span class="hidden sm:inline">Refresh</span>
                 </button>
                 <button @click="exportToExcel" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 shadow-md">
-                    <i class="fa-solid fa-file-excel"></i> Ekspor Excel
+                    <i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">Ekspor Excel</span>
                 </button>
             </div>
         </div>
+
+        <!-- Gauge Bar Loading Dipindah ke bawah Header -->
+        <div class="w-full h-1 bg-transparent overflow-hidden" x-show="loadingData" x-transition.opacity>
+            <div class="h-full bg-gradient-to-r from-purple-500 via-emerald-400 to-cyan-400 animate-pulse w-full origin-left transform" style="animation: indeterminate 1.5s infinite linear;"></div>
+        </div>
     </header>
+
+    <style>
+        @keyframes indeterminate {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
 
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-        <!-- PANEL SUMMARY TRANSPARAN (Server Real-Time) -->
-        <section id="summary-section" class="bg-slate-900 border border-purple-500/30 p-5 md:p-6 rounded-2xl shadow-xl space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <div class="flex items-center gap-2 text-purple-400 font-bold text-sm md:text-base">
-                    <i class="fa-solid fa-chart-simple"></i> Transparansi Rekapitulasi Server
-                </div>
-                <div class="text-[11px] md:text-xs text-slate-400 flex items-center gap-1">
-                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                    <span x-text="loadingData ? 'Sinkronisasi...' : 'Live Server'"></span>
-                </div>
-            </div>
-
-            <!-- Summary Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Zakat Fitrah -->
-                <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
-                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Fitrah (Uang, Beras & Jiwa)</p>
-                    <div class="mt-1 space-y-0.5">
-                        <div class="text-base md:text-lg font-bold text-accentGreen" x-text="formatRupiah(totalFitrahUang)"></div>
-                        <div class="text-xs md:text-sm font-semibold text-amber-400" x-text="totalFitrahBeras + ' Kg Beras'"></div>
+        <!-- KONTEN 1: PANEL SUMMARY (Tampil di Desktop, atau tab 'summary' di Mobile) -->
+        <section x-show="window.innerWidth >= 768 || currentTab === 'summary'" x-transition class="space-y-6">
+            <div class="bg-slate-900 border border-purple-500/30 p-5 md:p-6 rounded-2xl shadow-xl space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <div class="flex items-center gap-2 text-purple-400 font-bold text-sm md:text-base">
+                        <i class="fa-solid fa-chart-simple"></i> Transparansi Rekapitulasi Server
                     </div>
-                    <div class="mt-2 text-[11px] text-slate-400">
-                        Total Jiwa: <strong class="text-slate-200" x-text="totalJiwaFitrah + ' Orang'"></strong>
+                    <div class="text-[11px] md:text-xs text-slate-400 flex items-center gap-1">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span x-text="loadingData ? 'Sinkronisasi...' : 'Live Server'"></span>
                     </div>
                 </div>
 
-                <!-- Zakat Mal -->
-                <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
-                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Zakat Mal (Harta)</p>
-                    <h3 class="text-base md:text-xl font-bold mt-1 text-purple-400" x-text="formatRupiah(totalMal)"></h3>
-                    <p class="text-[11px] text-slate-400 mt-2">Profesi, Tabungan, Perniagaan</p>
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Fitrah (Uang, Beras & Jiwa)</p>
+                        <div class="mt-1 space-y-0.5">
+                            <div class="text-base md:text-lg font-bold text-accentGreen" x-text="formatRupiah(totalFitrahUang)"></div>
+                            <div class="text-xs md:text-sm font-semibold text-amber-400" x-text="totalFitrahBeras + ' Kg Beras'"></div>
+                        </div>
+                        <div class="mt-2 text-[11px] text-slate-400">
+                            Total Jiwa: <strong class="text-slate-200" x-text="totalJiwaFitrah + ' Orang'"></strong>
+                        </div>
+                    </div>
+
+                    <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Zakat Mal (Harta)</p>
+                        <h3 class="text-base md:text-xl font-bold mt-1 text-purple-400" x-text="formatRupiah(totalMal)"></h3>
+                        <p class="text-[11px] text-slate-400 mt-2">Profesi, Tabungan, Perniagaan</p>
+                    </div>
+
+                    <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Infak & Sedekah</p>
+                        <h3 class="text-base md:text-xl font-bold mt-1 text-cyan-400" x-text="formatRupiah(totalInfak)"></h3>
+                        <p class="text-[11px] text-slate-400 mt-2">Operasional & Sosial Umum</p>
+                    </div>
+
+                    <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
+                        <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Fidyah & Lainnya</p>
+                        <h3 class="text-base md:text-xl font-bold mt-1 text-amber-400" x-text="formatRupiah(totalFidyah)"></h3>
+                        <p class="text-[11px] text-slate-400 mt-2">Tebusan Puasa & Kaffarat</p>
+                    </div>
                 </div>
 
-                <!-- Infak & Sedekah -->
-                <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
-                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Infak & Sedekah</p>
-                    <h3 class="text-base md:text-xl font-bold mt-1 text-cyan-400" x-text="formatRupiah(totalInfak)"></h3>
-                    <p class="text-[11px] text-slate-400 mt-2">Operasional & Sosial Umum</p>
+                <!-- Filter Petugas -->
+                <div class="flex flex-wrap items-center gap-3 pt-2 text-xs">
+                    <span class="text-slate-300 font-medium"><i class="fa-solid fa-filter"></i> Filter Petugas:</span>
+                    <select x-model="filterPetugas" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-400">
+                        <option value="">Semua Petugas Amil</option>
+                        <template x-for="p in uniquePetugasList" :key="p">
+                            <option :value="p" x-text="p"></option>
+                        </template>
+                    </select>
+                    <span class="text-slate-400" x-text="'Total Data Server: ' + filteredTransactions.length"></span>
                 </div>
-
-                <!-- Fidyah -->
-                <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
-                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Fidyah & Lainnya</p>
-                    <h3 class="text-base md:text-xl font-bold mt-1 text-amber-400" x-text="formatRupiah(totalFidyah)"></h3>
-                    <p class="text-[11px] text-slate-400 mt-2">Tebusan Puasa & Kaffarat</p>
-                </div>
-            </div>
-
-            <!-- Filter Berdasarkan Petugas -->
-            <div class="flex flex-wrap items-center gap-3 pt-2 text-xs">
-                <span class="text-slate-300 font-medium"><i class="fa-solid fa-filter"></i> Filter Petugas:</span>
-                <select x-model="filterPetugas" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-400">
-                    <option value="">Semua Petugas Amil</option>
-                    <template x-for="p in uniquePetugasList" :key="p">
-                        <option :value="p" x-text="p"></option>
-                    </template>
-                </select>
-                <span class="text-slate-400" x-text="'Total Data Server: ' + filteredTransactions.length"></span>
             </div>
         </section>
 
-        <!-- Grid Content: Form & Tabel Data -->
+        <!-- GRID UTAMA FORM & TABEL -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- Form Input Muzakki (Dilindungi PIN & Toggle) -->
-            <div id="form-section" class="bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-md h-fit">
+            <!-- FORM INPUT -->
+            <section x-show="window.innerWidth >= 768 || currentTab === 'form'" x-transition class="bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-md h-fit">
                 <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
                     <h2 class="text-base md:text-lg font-bold flex items-center gap-2">
                         <i class="fa-solid fa-user-plus text-accentGreen"></i> Form Penerimaan ZIS
@@ -198,7 +197,7 @@
                         </div>
                     </div>
 
-                    <!-- Pengaturan Khusus Zakat Fitrah (Auto Kalkulasi) -->
+                    <!-- Zakat Fitrah Auto Kalkulasi -->
                     <template x-if="form.jenis === 'Zakat Fitrah'">
                         <div class="space-y-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
                             <div class="grid grid-cols-2 gap-3">
@@ -224,7 +223,7 @@
                         </div>
                     </template>
 
-                    <!-- Pengaturan Non-Fitrah -->
+                    <!-- Non-Fitrah -->
                     <template x-if="form.jenis !== 'Zakat Fitrah'">
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Nominal (Rp)</label>
@@ -248,12 +247,12 @@
 
                 <div x-show="!showForm" class="text-center py-8 text-slate-500 text-xs">
                     <i class="fa-solid fa-lock text-2xl mb-2 text-purple-400"></i>
-                    <p>Form input dikunci untuk keamanan data posko.<br>Silakan masukkan PIN amil untuk membuka.</p>
+                    <p>Form input terkunci untuk keamanan.<br>Klik tombol di atas atau gunakan PIN (3333) untuk membuka.</p>
                 </div>
-            </div>
+            </section>
 
-            <!-- Tabel Riwayat & Filter -->
-            <div id="table-section" class="lg:col-span-2 bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-xl flex flex-col">
+            <!-- TABEL DATABASE SERVER -->
+            <section x-show="window.innerWidth >= 768 || currentTab === 'table'" x-transition class="lg:col-span-2 bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-xl flex flex-col">
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 border-b border-slate-800 pb-3">
                     <h2 class="text-base md:text-lg font-bold flex items-center gap-2">
                         <i class="fa-solid fa-database text-cyan-400"></i> Tabel Data Server (Database)
@@ -314,41 +313,79 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
+            </section>
 
         </div>
+
+        <!-- JADWAL SHOLAT -->
+        <section x-show="window.innerWidth >= 768 || currentTab === 'sholat'" x-transition class="max-w-xl mx-auto pt-4">
+            <div class="bg-cardBg border border-slate-800 p-6 rounded-2xl shadow-xl text-center space-y-4">
+                <div class="inline-block bg-emerald-500/10 text-accentGreen p-3 rounded-2xl border border-emerald-500/20">
+                    <i class="fa-solid fa-kaaba text-3xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold">Jadwal Sholat Harian</h2>
+                    <p class="text-xs text-slate-400">Wilayah Surabaya & Sekitarnya</p>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 divide-y divide-slate-800 text-sm">
+                    <div class="flex justify-between py-2.5 font-medium">
+                        <span class="text-slate-400"><i class="fa-solid fa-cloud-sun text-amber-400 mr-2"></i> Subuh</span>
+                        <span class="text-emerald-400 font-bold" x-text="prayerTimes.Fajr || '--:--'"></span>
+                    </div>
+                    <div class="flex justify-between py-2.5 font-medium">
+                        <span class="text-slate-400"><i class="fa-solid fa-sun text-yellow-400 mr-2"></i> Dzuhur</span>
+                        <span class="text-emerald-400 font-bold" x-text="prayerTimes.Dhuhr || '--:--'"></span>
+                    </div>
+                    <div class="flex justify-between py-2.5 font-medium">
+                        <span class="text-slate-400"><i class="fa-solid fa-cloud-sun text-orange-400 mr-2"></i> Ashar</span>
+                        <span class="text-emerald-400 font-bold" x-text="prayerTimes.Asr || '--:--'"></span>
+                    </div>
+                    <div class="flex justify-between py-2.5 font-medium">
+                        <span class="text-slate-400"><i class="fa-solid fa-moon text-purple-400 mr-2"></i> Maghrib</span>
+                        <span class="text-emerald-400 font-bold" x-text="prayerTimes.Maghrib || '--:--'"></span>
+                    </div>
+                    <div class="flex justify-between py-2.5 font-medium">
+                        <span class="text-slate-400"><i class="fa-solid fa-star-and-crescent text-indigo-400 mr-2"></i> Isya'</span>
+                        <span class="text-emerald-400 font-bold" x-text="prayerTimes.Isha || '--:--'"></span>
+                    </div>
+                </div>
+                <p class="text-[10px] text-slate-500">Sinkronisasi otomatis berdasarkan tanggal hari ini.</p>
+            </div>
+        </section>
+
     </main>
 
     <!-- Footer Desktop -->
-    <footer class="hidden md:block border-t border-slate-800 text-center py-4 text-xs text-slate-500 mt-12 space-y-1">
+    <footer class="border-t border-slate-800 text-center py-4 text-xs text-slate-500 mt-12 space-y-1">
         <p>Yayasan Masjid Istiqbal &bull; Data tersimpan langsung di Google Sheets secara real-time</p>
         <p class="text-slate-400 font-medium">Created by Novi Riyanto</p>
     </footer>
 
-    <!-- Mobile Navigation Dock (UI Handphone) dengan Menu Masing-Masing -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-cardBg/95 backdrop-blur-md border-t border-slate-800 py-2.5 px-4 z-50 shadow-2xl">
+    <!-- Mobile Navigation Dock (Hanya Tampil di HP / Layar Kecil) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-cardBg/95 backdrop-blur-md border-t border-slate-800 py-2.5 px-3 z-50 shadow-2xl">
         <div class="flex justify-around items-center">
-            <!-- Menu 1: Refresh -->
-            <button @click="fetchDataFromServer" class="flex flex-col items-center text-slate-400 hover:text-purple-400 transition">
-                <i class="fa-solid fa-rotate text-lg" :class="{'animate-spin': loadingData}"></i>
-                <span class="text-[10px] mt-1 font-medium">Refresh</span>
-            </button>
-            <!-- Menu 2: Form (Dilindungi PIN) -->
-            <button @click="toggleFormPin" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 transition">
-                <i class="fa-solid fa-user-plus text-lg"></i>
-                <span class="text-[10px] mt-1 font-medium" x-text="showForm ? 'Tutup Form' : 'Input Form'"></span>
-            </button>
-            <!-- Menu 3: Summary -->
-            <a href="#summary-section" class="flex flex-col items-center text-slate-400 hover:text-purple-400 transition">
+            <!-- 1. Menu Summary -->
+            <button @click="currentTab = 'summary'" :class="currentTab === 'summary' ? 'text-accentPurple' : 'text-slate-400'" class="flex flex-col items-center transition">
                 <i class="fa-solid fa-chart-simple text-lg"></i>
                 <span class="text-[10px] mt-1 font-medium">Summary</span>
-            </a>
-            <!-- Menu 4: Data Server -->
-            <a href="#table-section" class="flex flex-col items-center text-slate-400 hover:text-cyan-400 transition">
+            </button>
+            <!-- 2. Menu Form (PIN Protected) -->
+            <button @click="checkFormPin" :class="currentTab === 'form' ? 'text-accentGreen' : 'text-slate-400'" class="flex flex-col items-center transition">
+                <i class="fa-solid fa-user-plus text-lg"></i>
+                <span class="text-[10px] mt-1 font-medium">Input Form</span>
+            </button>
+            <!-- 3. Menu Tabel Data Server -->
+            <button @click="currentTab = 'table'; fetchDataFromServer()" :class="currentTab === 'table' ? 'text-cyan-400' : 'text-slate-400'" class="flex flex-col items-center transition">
                 <i class="fa-solid fa-database text-lg"></i>
-                <span class="text-[10px] mt-1 font-medium">Data Server</span>
-            </a>
-            <!-- Menu 5: Excel -->
+                <span class="text-[10px] mt-1 font-medium">Database</span>
+            </button>
+            <!-- 4. Menu Waktu Sholat -->
+            <button @click="currentTab = 'sholat'; fetchPrayerTimes()" :class="currentTab === 'sholat' ? 'text-amber-400' : 'text-slate-400'" class="flex flex-col items-center transition">
+                <i class="fa-solid fa-clock text-lg"></i>
+                <span class="text-[10px] mt-1 font-medium">Sholat</span>
+            </button>
+            <!-- 5. Menu Excel -->
             <button @click="exportToExcel" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 transition">
                 <i class="fa-solid fa-file-excel text-lg"></i>
                 <span class="text-[10px] mt-1 font-medium">Excel</span>
@@ -362,16 +399,17 @@
 
         function zakatApp() {
             return {
+                currentTab: 'summary',
                 transactions: [],
                 search: '',
                 filterJenis: '',
                 filterPetugas: '',
                 loading: false,
                 loadingData: false,
-                showForm: false, // Form disembunyikan secara default
-                adminPin: "3333", // PIN standar untuk membuka form
+                showForm: false, 
+                adminPin: "3333",
+                prayerTimes: {},
 
-                // Tarif Tetap Zakat Fitrah
                 tarifFitrahUang: 50000,
                 tarifFitrahBeras: 3.5,
 
@@ -387,7 +425,11 @@
                     keterangan: ''
                 },
 
-                // Fungsi Proteksi PIN untuk Membuka/Menutup Form
+                initApp() {
+                    this.fetchDataFromServer();
+                    this.fetchPrayerTimes();
+                },
+
                 toggleFormPin() {
                     if (this.showForm) {
                         this.showForm = false;
@@ -395,17 +437,36 @@
                         let pin = prompt("Masukkan PIN Petugas Amil:");
                         if (pin === this.adminPin) {
                             this.showForm = true;
-                            // Scroll otomatis ke form jika di mobile
-                            setTimeout(() => {
-                                document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
-                            }, 100);
                         } else if (pin !== null) {
                             alert("PIN Salah! Akses form ditolak.");
                         }
                     }
                 },
 
-                // Ambil data langsung dari Google Sheets via doGet
+                checkFormPin() {
+                    let pin = prompt("Masukkan PIN Petugas Amil:");
+                    if (pin === this.adminPin) {
+                        this.showForm = true;
+                        this.currentTab = 'form';
+                    } else if (pin !== null) {
+                        alert("PIN Salah! Akses form ditolak.");
+                    }
+                },
+
+                async fetchPrayerTimes() {
+                    try {
+                        let today = new Date();
+                        let dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
+                        let res = await fetch(`https://api.aladhan.com/v1/timingsByCity/${dateStr}?city=Surabaya&country=Indonesia&method=11`);
+                        let data = await res.json();
+                        if (data && data.data) {
+                            this.prayerTimes = data.data.timings;
+                        }
+                    } catch (e) {
+                        console.error("Gagal memuat jadwal sholat", e);
+                    }
+                },
+
                 async fetchDataFromServer() {
                     this.loadingData = true;
                     try {
@@ -478,7 +539,6 @@
 
                         alert('Data berhasil disimpan ke Google Sheets!');
 
-                        // Reset form & kunci kembali form setelah submit
                         const currentPetugas = this.form.petugas;
                         this.form = {
                             petugas: currentPetugas,
@@ -492,8 +552,8 @@
                             keterangan: ''
                         };
                         this.showForm = false;
+                        this.currentTab = 'summary';
 
-                        // Ambil ulang data terbaru dari server
                         await this.fetchDataFromServer();
                     } catch (error) {
                         alert('Gagal mengirim data. Periksa koneksi internet Anda.');
@@ -580,7 +640,7 @@
                         const matchSearch = (t.nama || '').toLowerCase().includes(this.search.toLowerCase());
                         const matchJenis = this.filterJenis === '' || t.jenis === this.filterJenis;
                         const matchPetugas = this.filterPetugas === '' || t.petugas === this.filterPetugas;
-                        return matchSearch && matchJenis && matchPetugas;
+                        return matchSearch && matchJenis && matchJenis;
                     });
                 },
 
