@@ -32,7 +32,7 @@
         }
     </script>
 </head>
-<body class="bg-darkBg text-slate-100 min-h-screen font-sans antialiased" x-data="zakatApp()">
+<body class="bg-darkBg text-slate-100 min-h-screen font-sans antialiased" x-data="zakatApp()" x-init="fetchDataFromServer()">
 
     <!-- Header / Navbar -->
     <header class="bg-cardBg border-b border-slate-800 sticky top-0 z-50 shadow-lg">
@@ -48,8 +48,13 @@
             </div>
             <div class="flex items-center gap-3">
                 <span class="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-accentGreen border border-emerald-500/20 font-medium flex items-center gap-1.5">
-                    <i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> Sheets Connected
+                    <i class="fa-solid fa-cloud-arrow-up animate-pulse" :class="{'animate-spin': loadingData}"></i> 
+                    <span x-text="loadingData ? 'Memuat Server...' : 'Server Connected'"></span>
                 </span>
+                <!-- Tombol Refresh Data dari Server -->
+                <button @click="fetchDataFromServer" title="Ambil data terbaru dari server" class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 px-3 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2">
+                    <i class="fa-solid fa-rotate" :class="{'animate-spin': loadingData}"></i> Refresh
+                </button>
                 <button @click="exportToExcel" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 shadow-md">
                     <i class="fa-solid fa-file-excel"></i> Ekspor Excel
                 </button>
@@ -60,13 +65,13 @@
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-        <!-- PANEL SUMMARY TRANSPARAN (Tampil Terbuka Langsung) -->
+        <!-- PANEL SUMMARY TRANSPARAN (Membaca Data Server Real-Time) -->
         <section class="bg-slate-900 border border-purple-500/30 p-6 rounded-2xl shadow-xl space-y-4">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <div class="flex items-center gap-2 text-purple-400 font-bold">
                     <i class="fa-solid fa-chart-simple"></i> Transparansi Rekapitulasi & Summary Posko
                 </div>
-                <div class="text-xs text-slate-400">Terbuka Real-Time untuk Jamaah</div>
+                <div class="text-xs text-slate-400">Sinkronisasi Otomatis dari Server</div>
             </div>
 
             <!-- Summary Cards -->
@@ -114,7 +119,7 @@
                         <option :value="p" x-text="p"></option>
                     </template>
                 </select>
-                <span class="text-slate-400" x-text="'Total Transaksi Sesi Ini: ' + filteredTransactions.length + ' data'"></span>
+                <span class="text-slate-400" x-text="'Total Transaksi dari Server: ' + filteredTransactions.length + ' data'"></span>
             </div>
         </section>
 
@@ -222,7 +227,7 @@
             <div class="lg:col-span-2 bg-cardBg border border-slate-800 p-6 rounded-2xl shadow-md flex flex-col">
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 border-b border-slate-800 pb-3">
                     <h2 class="text-lg font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-list text-cyan-400"></i> Riwayat Sesi Ini
+                        <i class="fa-solid fa-list text-cyan-400"></i> Riwayat Data Server
                     </h2>
                     <div class="flex items-center gap-2 w-full sm:w-auto">
                         <input type="text" x-model="search" placeholder="Cari muzakki..." 
@@ -274,9 +279,7 @@
                             </template>
                             <template x-if="filteredTransactions.length === 0">
                                 <tr>
-                                    <td colspan="6" class="text-center py-8 text-slate-500 text-sm">
-                                        Belum ada data transaksi yang tercatat pada sesi ini.
-                                    </td>
+                                    <td colspan="6" class="text-center py-8 text-slate-500 text-sm" x-text="loadingData ? 'Memuat data dari server...' : 'Belum ada data atau gagal memuat.'"></td>
                                 </tr>
                             </template>
                         </tbody>
@@ -295,15 +298,16 @@
 
     <!-- Alpine.js Logic -->
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwQDvoVQZvyZDXDCfKTI34oTw4r9tH1vOHBybXwhFeMOV0v5lPDhLVUoFLkMJR-uy_U/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyLwOK1bEk7ufmGHEtTOEX9xmcJq0Qmb7GEcSnt91TBrUQ_I14iZ_wMuP4jfDyuvgVC/exec";
 
         function zakatApp() {
             return {
-                transactions: JSON.parse(localStorage.getItem('zakat_posko_cache_istiqbal_v2')) || [],
+                transactions: [],
                 search: '',
                 filterJenis: '',
                 filterPetugas: '',
                 loading: false,
+                loadingData: false,
                 
                 // Tarif Tetap Zakat Fitrah
                 tarifFitrahUang: 50000,
@@ -319,6 +323,22 @@
                     jumlahJiwa: 1,
                     nominal: 50000,
                     keterangan: ''
+                },
+
+                // Fungsi untuk mengambil data langsung dari Google Sheets via doGet
+                async fetchDataFromServer() {
+                    this.loadingData = true;
+                    try {
+                        let response = await fetch(WEB_APP_URL);
+                        let result = await response.json();
+                        if (Array.isArray(result)) {
+                            this.transactions = result;
+                        }
+                    } catch (error) {
+                        console.error("Gagal memuat data dari server:", error);
+                    } finally {
+                        this.loadingData = false;
+                    }
                 },
 
                 handleJenisChange() {
@@ -376,12 +396,9 @@
                             body: JSON.stringify(payload)
                         });
 
-                        this.transactions.unshift({
-                            id: Date.now(),
-                            ...payload
-                        });
-                        localStorage.setItem('zakat_posko_cache_istiqbal_v2', JSON.stringify(this.transactions));
+                        alert('Data berhasil disimpan ke Google Sheets!');
 
+                        // Reset form (pertahankan nama petugas)
                         const currentPetugas = this.form.petugas;
                         this.form = {
                             petugas: currentPetugas,
@@ -395,7 +412,8 @@
                             keterangan: ''
                         };
 
-                        alert('Data berhasil disimpan ke Google Sheets!');
+                        // Ambil ulang data terbaru dari server agar langsung tampil di tabel
+                        await this.fetchDataFromServer();
                     } catch (error) {
                         alert('Gagal mengirim data. Periksa koneksi internet Anda.');
                         console.error(error);
@@ -443,7 +461,7 @@
                 get totalFitrahUang() {
                     return this.filteredTransactions
                         .filter(t => t.jenis === 'Zakat Fitrah' && t.bentuk === 'Uang Tunai')
-                        .reduce((sum, t) => sum + t.nominal, 0);
+                        .reduce((sum, t) => sum + (Number(t.nominal) || 0), 0);
                 },
 
                 get totalJiwaFitrah() {
@@ -455,30 +473,30 @@
                 get totalFitrahBeras() {
                     return this.filteredTransactions
                         .filter(t => t.jenis === 'Zakat Fitrah' && t.bentuk === 'Beras')
-                        .reduce((sum, t) => sum + t.nominal, 0);
+                        .reduce((sum, t) => sum + (Number(t.nominal) || 0), 0);
                 },
 
                 get totalMal() {
                     return this.filteredTransactions
                         .filter(t => t.jenis === 'Zakat Mal')
-                        .reduce((sum, t) => sum + t.nominal, 0);
+                        .reduce((sum, t) => sum + (Number(t.nominal) || 0), 0);
                 },
 
                 get totalInfak() {
                     return this.filteredTransactions
                         .filter(t => t.jenis === 'Infak / Sedekah')
-                        .reduce((sum, t) => sum + t.nominal, 0);
+                        .reduce((sum, t) => sum + (Number(t.nominal) || 0), 0);
                 },
 
                 get totalFidyah() {
                     return this.filteredTransactions
                         .filter(t => t.jenis === 'Fidyah')
-                        .reduce((sum, t) => sum + t.nominal, 0);
+                        .reduce((sum, t) => sum + (Number(t.nominal) || 0), 0);
                 },
 
                 get filteredTransactions() {
                     return this.transactions.filter(t => {
-                        const matchSearch = t.nama.toLowerCase().includes(this.search.toLowerCase());
+                        const matchSearch = (t.nama || '').toLowerCase().includes(this.search.toLowerCase());
                         const matchJenis = this.filterJenis === '' || t.jenis === this.filterJenis;
                         const matchPetugas = this.filterPetugas === '' || t.petugas === this.filterPetugas;
                         return matchSearch && matchJenis && matchPetugas;
