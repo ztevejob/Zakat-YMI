@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -32,7 +32,6 @@
         }
     </script>
     <style>
-        /* Sembunyikan scrollbar untuk pengalaman app-like di mobile */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -145,13 +144,19 @@
         <!-- Grid Content: Form & Tabel Data -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- Form Input Muzakki -->
+            <!-- Form Input Muzakki (Dilindungi PIN & Toggle) -->
             <div id="form-section" class="bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-md h-fit">
-                <h2 class="text-base md:text-lg font-bold mb-4 flex items-center gap-2 border-b border-slate-800 pb-3">
-                    <i class="fa-solid fa-user-plus text-accentGreen"></i> Form Penerimaan ZIS
-                </h2>
+                <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                    <h2 class="text-base md:text-lg font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-user-plus text-accentGreen"></i> Form Penerimaan ZIS
+                    </h2>
+                    <button @click="toggleFormPin" class="text-xs bg-purple-600/20 text-purple-400 border border-purple-500/30 px-2.5 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5">
+                        <i class="fa-solid" :class="showForm ? 'fa-lock-open text-emerald-400' : 'fa-lock'"></i>
+                        <span x-text="showForm ? 'Tutup Form' : 'Buka Form (PIN)'"></span>
+                    </button>
+                </div>
                 
-                <form @submit.prevent="submitTransaction" class="space-y-4">
+                <form @submit.prevent="submitTransaction" class="space-y-4" x-show="showForm" x-transition>
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1">Nama Petugas Amil</label>
                         <input type="text" x-model="form.petugas" required placeholder="Contoh: Ust. Ahmad / Pak Budi" 
@@ -240,6 +245,11 @@
                         <span x-show="loading"><i class="fa-solid fa-spinner animate-spin"></i> Menyimpan...</span>
                     </button>
                 </form>
+
+                <div x-show="!showForm" class="text-center py-8 text-slate-500 text-xs">
+                    <i class="fa-solid fa-lock text-2xl mb-2 text-purple-400"></i>
+                    <p>Form input dikunci untuk keamanan data posko.<br>Silakan masukkan PIN amil untuk membuka.</p>
+                </div>
             </div>
 
             <!-- Tabel Riwayat & Filter -->
@@ -315,30 +325,30 @@
         <p class="text-slate-400 font-medium">Created by Novi Riyanto</p>
     </footer>
 
-    <!-- Mobile Navigation Dock (UI Handphone) -->
+    <!-- Mobile Navigation Dock (UI Handphone) dengan Menu Masing-Masing -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-cardBg/95 backdrop-blur-md border-t border-slate-800 py-2.5 px-4 z-50 shadow-2xl">
         <div class="flex justify-around items-center">
-            <!-- Tombol Refresh -->
+            <!-- Menu 1: Refresh -->
             <button @click="fetchDataFromServer" class="flex flex-col items-center text-slate-400 hover:text-purple-400 transition">
                 <i class="fa-solid fa-rotate text-lg" :class="{'animate-spin': loadingData}"></i>
                 <span class="text-[10px] mt-1 font-medium">Refresh</span>
             </button>
-            <!-- Nav ke Form -->
-            <a href="#form-section" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 transition">
+            <!-- Menu 2: Form (Dilindungi PIN) -->
+            <button @click="toggleFormPin" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 transition">
                 <i class="fa-solid fa-user-plus text-lg"></i>
-                <span class="text-[10px] mt-1 font-medium">Input Form</span>
-            </a>
-            <!-- Nav ke Summary/Statistik -->
+                <span class="text-[10px] mt-1 font-medium" x-text="showForm ? 'Tutup Form' : 'Input Form'"></span>
+            </button>
+            <!-- Menu 3: Summary -->
             <a href="#summary-section" class="flex flex-col items-center text-slate-400 hover:text-purple-400 transition">
                 <i class="fa-solid fa-chart-simple text-lg"></i>
                 <span class="text-[10px] mt-1 font-medium">Summary</span>
             </a>
-            <!-- Nav ke Tabel Server -->
+            <!-- Menu 4: Data Server -->
             <a href="#table-section" class="flex flex-col items-center text-slate-400 hover:text-cyan-400 transition">
                 <i class="fa-solid fa-database text-lg"></i>
                 <span class="text-[10px] mt-1 font-medium">Data Server</span>
             </a>
-            <!-- Tombol Excel -->
+            <!-- Menu 5: Excel -->
             <button @click="exportToExcel" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 transition">
                 <i class="fa-solid fa-file-excel text-lg"></i>
                 <span class="text-[10px] mt-1 font-medium">Excel</span>
@@ -358,7 +368,9 @@
                 filterPetugas: '',
                 loading: false,
                 loadingData: false,
-                
+                showForm: false, // Form disembunyikan secara default
+                adminPin: "3333", // PIN standar untuk membuka form
+
                 // Tarif Tetap Zakat Fitrah
                 tarifFitrahUang: 50000,
                 tarifFitrahBeras: 3.5,
@@ -373,6 +385,24 @@
                     jumlahJiwa: 1,
                     nominal: 50000,
                     keterangan: ''
+                },
+
+                // Fungsi Proteksi PIN untuk Membuka/Menutup Form
+                toggleFormPin() {
+                    if (this.showForm) {
+                        this.showForm = false;
+                    } else {
+                        let pin = prompt("Masukkan PIN Petugas Amil:");
+                        if (pin === this.adminPin) {
+                            this.showForm = true;
+                            // Scroll otomatis ke form jika di mobile
+                            setTimeout(() => {
+                                document.getElementById('form-section').scrollIntoView({ behavior: 'smooth' });
+                            }, 100);
+                        } else if (pin !== null) {
+                            alert("PIN Salah! Akses form ditolak.");
+                        }
+                    }
                 },
 
                 // Ambil data langsung dari Google Sheets via doGet
@@ -448,7 +478,7 @@
 
                         alert('Data berhasil disimpan ke Google Sheets!');
 
-                        // Reset form (pertahankan nama petugas)
+                        // Reset form & kunci kembali form setelah submit
                         const currentPetugas = this.form.petugas;
                         this.form = {
                             petugas: currentPetugas,
@@ -461,6 +491,7 @@
                             nominal: 50000,
                             keterangan: ''
                         };
+                        this.showForm = false;
 
                         // Ambil ulang data terbaru dari server
                         await this.fetchDataFromServer();
@@ -526,7 +557,7 @@
                         .reduce((sum, t) => sum + (Number(t.nominal) || 0), 0);
                 },
 
-                    get totalMal() {
+                get totalMal() {
                     return this.filteredTransactions
                         .filter(t => t.jenis === 'Zakat Mal')
                         .reduce((sum, t) => sum + (Number(t.nominal) || 0), 0);
