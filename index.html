@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Posko Penerimaan ZIS (Excel & WA Receipt)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- SheetJS (XLSX) untuk Export Excel Profesional -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        cardBg: '#1e293b',
+                        accentGreen: '#10b981',
+                        accentPurple: '#8b5cf6'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-darkBg text-slate-100 min-h-screen font-sans antialiased" x-data="zakatApp()">
+
+    <!-- Header / Navbar -->
+    <header class="bg-cardBg border-b border-slate-800 sticky top-0 z-50 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-accentGreen/10 p-3 rounded-xl border border-accentGreen/30 text-accentGreen">
+                    <i class="fa-solid fa-mosque text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide">Posko ZIS Ramadan</h1>
+                    <p class="text-xs text-slate-400">Pencatatan Kolektif Amil Zakat & Infak</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-accentGreen border border-emerald-500/20 font-medium flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> Sheets Connected
+                </span>
+                <!-- Tombol Buka Mode Admin dengan PIN -->
+                <button @click="promptAdmin" class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 px-3 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2">
+                    <i class="fa-solid fa-lock" x-show="!showAdmin"></i>
+                    <i class="fa-solid fa-lock-open" x-show="showAdmin"></i>
+                    <span x-text="showAdmin ? 'Tutup Panel Admin' : 'Mode Admin (PIN)'"></span>
+                </button>
+                <button @click="exportToExcel" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 shadow-md">
+                    <i class="fa-solid fa-file-excel"></i> Ekspor Excel
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- PANEL ADMIN (Dilindungi PIN 3333) -->
+        <section x-show="showAdmin" x-transition class="bg-slate-900 border border-purple-500/30 p-6 rounded-2xl shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2 text-purple-400 font-bold">
+                    <i class="fa-solid fa-gauge-high"></i> Panel Rekapitulasi & Summary Admin (Protected)
+                </div>
+                <button @click="showAdmin = false" class="text-xs text-slate-400 hover:text-white">Tutup <i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Zakat Fitrah (Uang, Beras & Jiwa) -->
+                <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Fitrah (Uang, Beras & Jiwa)</p>
+                    <div class="mt-1 space-y-1">
+                        <div class="text-lg font-bold text-accentGreen" x-text="formatRupiah(totalFitrahUang)"></div>
+                        <div class="text-sm font-semibold text-amber-400" x-text="totalFitrahBeras + ' Kg Beras'"></div>
+                    </div>
+                    <div class="mt-2 text-xs text-slate-400">
+                        Total Jiwa: <strong class="text-slate-200" x-text="totalJiwaFitrah + ' Orang'"></strong>
+                    </div>
+                </div>
+
+                <!-- Zakat Mal -->
+                <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Zakat Mal (Harta)</p>
+                    <h3 class="text-xl font-bold mt-1 text-purple-400" x-text="formatRupiah(totalMal)"></h3>
+                    <p class="text-xs text-slate-400 mt-2">Profesi, Tabungan, Perniagaan</p>
+                </div>
+
+                <!-- Infak & Sedekah -->
+                <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Infak & Sedekah</p>
+                    <h3 class="text-xl font-bold mt-1 text-cyan-400" x-text="formatRupiah(totalInfak)"></h3>
+                    <p class="text-xs text-slate-400 mt-2">Operasional & Sosial Umum</p>
+                </div>
+
+                <!-- Fidyah -->
+                <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Fidyah & Lainnya</p>
+                    <h3 class="text-xl font-bold mt-1 text-amber-400" x-text="formatRupiah(totalFidyah)"></h3>
+                    <p class="text-xs text-slate-400 mt-2">Tebusan Puasa & Kaffarat</p>
+                </div>
+            </div>
+
+            <!-- Filter Khusus Admin (Berdasarkan Petugas) -->
+            <div class="flex flex-wrap items-center gap-3 pt-2 text-xs">
+                <span class="text-slate-300 font-medium"><i class="fa-solid fa-filter"></i> Filter Kinerja Petugas:</span>
+                <select x-model="filterPetugas" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-400">
+                    <option value="">Semua Petugas Amil</option>
+                    <template x-for="p in uniquePetugasList" :key="p">
+                        <option :value="p" x-text="p"></option>
+                    </template>
+                </select>
+                <span class="text-slate-400" x-text="'Total Transaksi Sesi Ini: ' + filteredTransactions.length + ' data'"></span>
+            </div>
+        </section>
+
+        <!-- Grid Content: Form & Tabel Data -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Form Input Muzakki (10 Kolom) -->
+            <div class="bg-cardBg border border-slate-800 p-6 rounded-2xl shadow-md h-fit">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 border-b border-slate-800 pb-3">
+                    <i class="fa-solid fa-user-plus text-accentGreen"></i> Form Penerimaan ZIS
+                </h2>
+                
+                <form @submit.prevent="submitTransaction" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Nama Petugas Amil</label>
+                        <input type="text" x-model="form.petugas" required placeholder="Contoh: Ust. Ahmad / Pak Budi" 
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Nama Muzakki</label>
+                            <input type="text" x-model="form.nama" required placeholder="Bapak Ahmad" 
+                                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">No. Telepon / WA</label>
+                            <input type="text" x-model="form.phone" placeholder="0812xxxx" 
+                                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Jenis Dana</label>
+                            <select x-model="form.jenis" @change="handleJenisChange" 
+                                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen">
+                                <option value="Zakat Fitrah">Zakat Fitrah</option>
+                                <option value="Zakat Mal">Zakat Mal</option>
+                                <option value="Infak / Sedekah">Infak / Sedekah</option>
+                                <option value="Fidyah">Fidyah</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Metode Pembayaran</label>
+                            <select x-model="form.metodeBayar" 
+                                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen">
+                                <option value="Tunai">Tunai</option>
+                                <option value="Transfer Bank">Transfer Bank</option>
+                                <option value="QRIS">QRIS</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Pengaturan Khusus Zakat Fitrah -->
+                    <template x-if="form.jenis === 'Zakat Fitrah'">
+                        <div class="space-y-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-300 mb-1">Bentuk Setoran</label>
+                                    <select x-model="form.bentuk" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen">
+                                        <option value="Uang Tunai">Uang Tunai</option>
+                                        <option value="Beras">Beras</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-medium text-slate-300 mb-1">Jumlah Jiwa</label>
+                                    <input type="number" x-model="form.jumlahJiwa" required min="1" placeholder="1" 
+                                        class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1" x-text="form.bentuk === 'Uang Tunai' ? 'Total Nominal (Rp)' : 'Total Berat Beras (Kg)'"></label>
+                                <input type="number" x-model="form.nominal" required min="0" placeholder="0" 
+                                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen">
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Pengaturan Non-Fitrah -->
+                    <template x-if="form.jenis !== 'Zakat Fitrah'">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Nominal (Rp)</label>
+                            <input type="number" x-model="form.nominal" required min="0" placeholder="Contoh: 500000" 
+                                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen">
+                        </div>
+                    </template>
+
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Keterangan / Pesan Khusus (Opsional)</label>
+                        <textarea x-model="form.keterangan" rows="2" placeholder="Misal: Zakat untuk Suami, Istri, & 2 Anak" 
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen"></textarea>
+                    </div>
+
+                    <button type="submit" :disabled="loading" 
+                        class="w-full bg-accentGreen hover:bg-emerald-600 text-slate-950 font-semibold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2">
+                        <span x-show="!loading"><i class="fa-solid fa-paper-plane"></i> Simpan & Kirim ke Sheets</span>
+                        <span x-show="loading"><i class="fa-solid fa-spinner animate-spin"></i> Menyimpan...</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tabel Riwayat & Filter -->
+            <div class="lg:col-span-2 bg-cardBg border border-slate-800 p-6 rounded-2xl shadow-md flex flex-col">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 border-b border-slate-800 pb-3">
+                    <h2 class="text-lg font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-list text-cyan-400"></i> Riwayat Sesi Ini
+                    </h2>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <input type="text" x-model="search" placeholder="Cari muzakki..." 
+                            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen w-full sm:w-48">
+                        <select x-model="filterJenis" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen">
+                            <option value="">Semua Jenis</option>
+                            <option value="Zakat Fitrah">Zakat Fitrah</option>
+                            <option value="Zakat Mal">Zakat Mal</option>
+                            <option value="Infak / Sedekah">Infak / Sedekah</option>
+                            <option value="Fidyah">Fidyah</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tabel Data -->
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-xs text-slate-400 uppercase">
+                                <th class="py-3 px-3">Waktu (WIB)</th>
+                                <th class="py-3 px-3">Petugas</th>
+                                <th class="py-3 px-3">Muzakki</th>
+                                <th class="py-3 px-3">Jenis & Metode</th>
+                                <th class="py-3 px-3">Nominal / Berat</th>
+                                <th class="py-3 px-3 text-center">Aksi WA</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60 text-sm">
+                            <template x-for="item in filteredTransactions" :key="item.id">
+                                <tr class="hover:bg-slate-800/40 transition">
+                                    <td class="py-3 px-3 text-xs text-slate-400" x-text="item.timestamp"></td>
+                                    <td class="py-3 px-3 text-xs font-medium text-emerald-400" x-text="item.petugas"></td>
+                                    <td class="py-3 px-3 font-medium">
+                                        <div x-text="item.nama"></div>
+                                        <div class="text-xs text-slate-500" x-text="item.phone"></div>
+                                    </td>
+                                    <td class="py-3 px-3 text-xs">
+                                        <div class="font-medium" x-text="item.jenis"></div>
+                                        <div class="text-slate-400" x-text="item.metodeBayar + ' (' + item.bentuk + ')'"></div>
+                                    </td>
+                                    <td class="py-3 px-3 font-semibold" x-text="item.jenis === 'Zakat Fitrah' && item.bentuk === 'Beras' ? item.nominal + ' Kg' : formatRupiah(item.nominal)"></td>
+                                    <td class="py-3 px-3 text-center">
+                                        <button @click="sendWhatsApp(item)" title="Kirim Kwitansi ke WhatsApp" 
+                                            class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-2.5 py-1.5 rounded-lg text-xs font-medium transition inline-flex items-center gap-1.5">
+                                            <i class="fa-brands fa-whatsapp text-sm"></i> Kirim WA
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+                            <template x-if="filteredTransactions.length === 0">
+                                <tr>
+                                    <td colspan="6" class="text-center py-8 text-slate-500 text-sm">
+                                        Belum ada data transaksi yang tercatat pada sesi ini.
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 text-center py-4 text-xs text-slate-500 mt-12">
+        Aplikasi Posko ZIS &bull; Data tersimpan langsung di Google Sheets secara real-time
+    </footer>
+
+    <!-- Alpine.js Logic -->
+    <script>
+        // URL WEB APP GOOGLE APPS SCRIPT ANDA
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwQDvoVQZvyZDXDCfKTI34oTw4r9tH1vOHBybXwhFeMOV0v5lPDhLVUoFLkMJR-uy_U/exec";
+
+        function zakatApp() {
+            return {
+                transactions: JSON.parse(localStorage.getItem('zakat_posko_cache_10col')) || [],
+                search: '',
+                filterJenis: '',
+                filterPetugas: '',
+                showAdmin: false, 
+                loading: false,
+                form: {
+                    petugas: '',
+                    nama: '',
+                    phone: '',
+                    metodeBayar: 'Tunai',
+                    jenis: 'Zakat Fitrah',
+                    bentuk: 'Uang Tunai',
+                    jumlahJiwa: 1,
+                    nominal: '',
+                    keterangan: ''
+                },
+
+                promptAdmin() {
+                    if (this.showAdmin) {
+                        this.showAdmin = false;
+                        return;
+                    }
+                    let pin = prompt("Masukkan PIN Admin (4 Digit):");
+                    if (pin === "3333") {
+                        this.showAdmin = true;
+                    } else if (pin !== null) {
+                        alert("PIN Salah! Akses ditolak.");
+                    }
+                },
+
+                handleJenisChange() {
+                    if (this.form.jenis !== 'Zakat Fitrah') {
+                        this.form.bentuk = 'Uang Tunai';
+                        this.form.jumlahJiwa = 1;
+                    }
+                },
+
+                async submitTransaction() {
+                    this.loading = true;
+
+                    // Format Timestamp WIB
+                    const timestampWIB = new Date().toLocaleString('id-ID', {
+                        timeZone: 'Asia/Jakarta',
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+
+                    const payload = {
+                        timestamp: timestampWIB,
+                        nama: this.form.nama,
+                        phone: this.form.phone || '-',
+                        petugas: this.form.petugas,
+                        jenis: this.form.jenis,
+                        metodeBayar: this.form.metodeBayar,
+                        bentuk: this.form.bentuk,
+                        jumlahJiwa: this.form.jenis === 'Zakat Fitrah' ? Number(this.form.jumlahJiwa) : '-',
+                        nominal: Number(this.form.nominal),
+                        keterangan: this.form.keterangan || '-'
+                    };
+
+                    try {
+                        await fetch(WEB_APP_URL, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+
+                        // Tambahkan ke tabel riwayat lokal sesi ini
+                        this.transactions.unshift({
+                            id: Date.now(),
+                            ...payload
+                        });
+                        localStorage.setItem('zakat_posko_cache_10col', JSON.stringify(this.transactions));
+
+                        // Reset form (pertahankan nama petugas)
+                        const currentPetugas = this.form.petugas;
+                        this.form = {
+                            petugas: currentPetugas,
+                            nama: '',
+                            phone: '',
+                            metodeBayar: 'Tunai',
+                            jenis: 'Zakat Fitrah',
+                            bentuk: 'Uang Tunai',
+                            jumlahJiwa: 1,
+                            nominal: '',
+                            keterangan: ''
+                        };
+
+                        alert('Data berhasil disimpan ke Google Sheets!');
+                    } catch (error) {
+                        alert('Gagal mengirim data. Periksa koneksi internet Anda.');
+                        console.error(error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                formatRupiah(value) {
+                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value || 0);
+                },
+
+                sendWhatsApp(item) {
+                    let phoneClean = item.phone.replace(/[^0-9]/g, '');
+                    if (phoneClean.startsWith('0')) {
+                        phoneClean = '62' + phoneClean.slice(1);
+                    }
+
+                    let nilaiBayar = item.jenis === 'Zakat Fitrah' && item.bentuk === 'Beras' 
+                        ? item.nominal + ' Kg Beras' 
+                        : this.formatRupiah(item.nominal);
+
+                    let pesan = `*Bismillah, Terima Kasih*%0a%0a` +
+                                `Telah diterima setoran ZIS dengan rincian berikut:%0a%0a` +
+                                `🏛️ *BUKTI PENERIMAAN ZIS*%0a` +
+                                `📅 Waktu: ${item.timestamp}%0a` +
+                                `👤 Muzakki: *${item.nama}*%0a` +
+                                `📦 Jenis Dana: ${item.jenis}%0a` +
+                                `💳 Metode: ${item.metodeBayar} (${item.bentuk})%0a` +
+                                (item.jenis === 'Zakat Fitrah' ? `👥 Jumlah Jiwa: ${item.jumlahJiwa} Jiwa%0a` : ``) +
+                                `💰 Nominal / Berat: *${nilaiBayar}*%0a` +
+                                `📝 Keterangan: ${item.keterangan}%0a` +
+                                `👨‍💼 Petugas Amil: ${item.petugas}%0a%0a` +
+                                `🙏 _"Semoga harta dan jiwa Bapak/Ibu senantiasa diberkahi, dilipatgandakan pahalanya, dan mensucikan penghasilan kita. Aamiin."_%0a%0a` +
+                                `---%0a*Posko ZIS Ramadan*`;
+
+                    let waUrl = `https://wa.me/${phoneClean}?text=${pesan}`;
+                    window.open(waUrl, '_blank');
+                },
+
+                get uniquePetugasList() {
+                    return [...new Set(this.transactions.map(t => t.petugas))];
+                },
+
+                get totalFitrahUang() {
+                    return this.filteredTransactions
+                        .filter(t => t.jenis === 'Zakat Fitrah' && t.bentuk === 'Uang Tunai')
+                        .reduce((sum, t) => sum + t.nominal, 0);
+                },
+
+                get totalJiwaFitrah() {
+                    return this.filteredTransactions
+                        .filter(t => t.jenis === 'Zakat Fitrah')
+                        .reduce((sum, t) => sum + (Number(t.jumlahJiwa) || 0), 0);
+                },
+
+                get totalFitrahBeras() {
+                    return this.filteredTransactions
+                        .filter(t => t.jenis === 'Zakat Fitrah' && t.bentuk === 'Beras')
+                        .reduce((sum, t) => sum + t.nominal, 0);
+                },
+
+                get totalMal() {
+                    return this.filteredTransactions
+                        .filter(t => t.jenis === 'Zakat Mal')
+                        .reduce((sum, t) => sum + t.nominal, 0);
+                },
+
+                get totalInfak() {
+                    return this.filteredTransactions
+                        .filter(t => t.jenis === 'Infak / Sedekah')
+                        .reduce((sum, t) => sum + t.nominal, 0);
+                },
+
+                get totalFidyah() {
+                    return this.filteredTransactions
+                        .filter(t => t.jenis === 'Fidyah')
+                        .reduce((sum, t) => sum + t.nominal, 0);
+                },
+
+                get filteredTransactions() {
+                    return this.transactions.filter(t => {
+                        const matchSearch = t.nama.toLowerCase().includes(this.search.toLowerCase());
+                        const matchJenis = this.filterJenis === '' || t.jenis === this.filterJenis;
+                        const matchPetugas = this.filterPetugas === '' || t.petugas === this.filterPetugas;
+                        return matchSearch && matchJenis && matchPetugas;
+                    });
+                },
+
+                exportToExcel() {
+                    if (this.transactions.length === 0) {
+                        alert('Belum ada data untuk diekspor!');
+                        return;
+                    }
+
+                    // Format data untuk SheetJS
+                    let dataExcel = this.transactions.map(t => ({
+                        "Timestamp": t.timestamp,
+                        "Nama Muzakki": t.nama,
+                        "No Telepon": t.phone,
+                        "Petugas Amil": t.petugas,
+                        "Jenis Dana": t.jenis,
+                        "Metode Pembayaran": t.metodeBayar,
+                        "Bentuk": t.bentuk,
+                        "Jumlah Jiwa": t.jumlahJiwa,
+                        "Nominal / Berat": t.nominal,
+                        "Keterangan": t.keterangan
+                    }));
+
+                    let worksheet = XLSX.utils.json_to_sheet(dataExcel);
+                    let workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "Rekap ZIS");
+
+                    // Unduh file Excel (.xlsx)
+                    XLSX.writeFile(workbook, "rekap_penerimaan_zis_posko.xlsx");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
