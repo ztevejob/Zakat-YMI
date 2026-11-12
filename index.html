@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pencatatan ZIS - Yayasan Masjid Istiqbal</title>
-    <!-- Tailwind CSS (Primary & Fallback) -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         if (typeof tailwind === 'undefined') {
@@ -16,7 +16,7 @@
     <!-- SheetJS (XLSX) untuk Export Excel Profesional -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <script>
         tailwind.config = {
             theme: {
@@ -31,27 +31,43 @@
             }
         }
     </script>
+    <style>
+        /* Sembunyikan scrollbar untuk pengalaman app-like di mobile */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
 </head>
-<body class="bg-darkBg text-slate-100 min-h-screen font-sans antialiased" x-data="zakatApp()" x-init="fetchDataFromServer()">
+<body class="bg-darkBg text-slate-100 min-h-screen font-sans antialiased pb-24 md:pb-8" x-data="zakatApp()" x-init="fetchDataFromServer()">
+
+    <!-- Loading Bar (Gauge Bar Loading Fetch Data) -->
+    <div class="fixed top-0 left-0 right-0 z-50 h-1.5 bg-transparent overflow-hidden" x-show="loadingData" x-transition.opacity>
+        <div class="h-full bg-gradient-to-r from-purple-500 via-emerald-400 to-cyan-400 animate-pulse w-full origin-left transform" style="animation: indeterminate 1.5s infinite linear;"></div>
+    </div>
+    <style>
+        @keyframes indeterminate {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
 
     <!-- Header / Navbar -->
-    <header class="bg-cardBg border-b border-slate-800 sticky top-0 z-50 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center space-x-3">
-                <div class="bg-accentGreen/10 p-3 rounded-xl border border-accentGreen/30 text-accentGreen">
-                    <i class="fa-solid fa-mosque text-2xl"></i>
+    <header class="bg-cardBg border-b border-slate-800 sticky top-0 z-40 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-3.5 flex justify-between items-center gap-3">
+            <div class="flex items-center space-x-3 overflow-hidden">
+                <div class="bg-accentGreen/10 p-2.5 rounded-xl border border-accentGreen/30 text-accentGreen shrink-0">
+                    <i class="fa-solid fa-mosque text-xl"></i>
                 </div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-wide">Posko ZIS Yayasan Masjid Istiqbal</h1>
-                    <p class="text-xs text-slate-400">Pencatatan Kolektif Amil Zakat, Infak & Sedekah</p>
+                <div class="truncate">
+                    <h1 class="text-base md:text-xl font-bold tracking-wide truncate">ZIS Yayasan Masjid Istiqbal</h1>
+                    <p class="text-[11px] md:text-xs text-slate-400 truncate">Pencatatan Kolektif Amil Zakat & Sedekah</p>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="hidden md:flex items-center gap-3">
                 <span class="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-accentGreen border border-emerald-500/20 font-medium flex items-center gap-1.5">
-                    <i class="fa-solid fa-cloud-arrow-up animate-pulse" :class="{'animate-spin': loadingData}"></i> 
+                    <i class="fa-solid fa-cloud-arrow-up" :class="{'animate-spin': loadingData}"></i> 
                     <span x-text="loadingData ? 'Memuat Server...' : 'Server Connected'"></span>
                 </span>
-                <!-- Tombol Refresh Data dari Server -->
                 <button @click="fetchDataFromServer" title="Ambil data terbaru dari server" class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 px-3 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2">
                     <i class="fa-solid fa-rotate" :class="{'animate-spin': loadingData}"></i> Refresh
                 </button>
@@ -65,70 +81,73 @@
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-        <!-- PANEL SUMMARY TRANSPARAN (Membaca Data Server Real-Time) -->
-        <section class="bg-slate-900 border border-purple-500/30 p-6 rounded-2xl shadow-xl space-y-4">
+        <!-- PANEL SUMMARY TRANSPARAN (Server Real-Time) -->
+        <section id="summary-section" class="bg-slate-900 border border-purple-500/30 p-5 md:p-6 rounded-2xl shadow-xl space-y-4">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <div class="flex items-center gap-2 text-purple-400 font-bold">
-                    <i class="fa-solid fa-chart-simple"></i> Transparansi Rekapitulasi & Summary Posko
+                <div class="flex items-center gap-2 text-purple-400 font-bold text-sm md:text-base">
+                    <i class="fa-solid fa-chart-simple"></i> Transparansi Rekapitulasi Server
                 </div>
-                <div class="text-xs text-slate-400">Sinkronisasi Otomatis dari Server</div>
+                <div class="text-[11px] md:text-xs text-slate-400 flex items-center gap-1">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span x-text="loadingData ? 'Sinkronisasi...' : 'Live Server'"></span>
+                </div>
             </div>
 
             <!-- Summary Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Zakat Fitrah (Uang, Beras & Jiwa) -->
+                <!-- Zakat Fitrah -->
                 <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Fitrah (Uang, Beras & Jiwa)</p>
-                    <div class="mt-1 space-y-1">
-                        <div class="text-lg font-bold text-accentGreen" x-text="formatRupiah(totalFitrahUang)"></div>
-                        <div class="text-sm font-semibold text-amber-400" x-text="totalFitrahBeras + ' Kg Beras'"></div>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Fitrah (Uang, Beras & Jiwa)</p>
+                    <div class="mt-1 space-y-0.5">
+                        <div class="text-base md:text-lg font-bold text-accentGreen" x-text="formatRupiah(totalFitrahUang)"></div>
+                        <div class="text-xs md:text-sm font-semibold text-amber-400" x-text="totalFitrahBeras + ' Kg Beras'"></div>
                     </div>
-                    <div class="mt-2 text-xs text-slate-400">
+                    <div class="mt-2 text-[11px] text-slate-400">
                         Total Jiwa: <strong class="text-slate-200" x-text="totalJiwaFitrah + ' Orang'"></strong>
                     </div>
                 </div>
 
                 <!-- Zakat Mal -->
                 <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Zakat Mal (Harta)</p>
-                    <h3 class="text-xl font-bold mt-1 text-purple-400" x-text="formatRupiah(totalMal)"></h3>
-                    <p class="text-xs text-slate-400 mt-2">Profesi, Tabungan, Perniagaan</p>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Zakat Mal (Harta)</p>
+                    <h3 class="text-base md:text-xl font-bold mt-1 text-purple-400" x-text="formatRupiah(totalMal)"></h3>
+                    <p class="text-[11px] text-slate-400 mt-2">Profesi, Tabungan, Perniagaan</p>
                 </div>
 
                 <!-- Infak & Sedekah -->
                 <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Infak & Sedekah</p>
-                    <h3 class="text-xl font-bold mt-1 text-cyan-400" x-text="formatRupiah(totalInfak)"></h3>
-                    <p class="text-xs text-slate-400 mt-2">Operasional & Sosial Umum</p>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Infak & Sedekah</p>
+                    <h3 class="text-base md:text-xl font-bold mt-1 text-cyan-400" x-text="formatRupiah(totalInfak)"></h3>
+                    <p class="text-[11px] text-slate-400 mt-2">Operasional & Sosial Umum</p>
                 </div>
 
                 <!-- Fidyah -->
                 <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
-                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Fidyah & Lainnya</p>
-                    <h3 class="text-xl font-bold mt-1 text-amber-400" x-text="formatRupiah(totalFidyah)"></h3>
-                    <p class="text-xs text-slate-400 mt-2">Tebusan Puasa & Kaffarat</p>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Fidyah & Lainnya</p>
+                    <h3 class="text-base md:text-xl font-bold mt-1 text-amber-400" x-text="formatRupiah(totalFidyah)"></h3>
+                    <p class="text-[11px] text-slate-400 mt-2">Tebusan Puasa & Kaffarat</p>
                 </div>
             </div>
 
             <!-- Filter Berdasarkan Petugas -->
             <div class="flex flex-wrap items-center gap-3 pt-2 text-xs">
-                <span class="text-slate-300 font-medium"><i class="fa-solid fa-filter"></i> Filter Kinerja Petugas:</span>
+                <span class="text-slate-300 font-medium"><i class="fa-solid fa-filter"></i> Filter Petugas:</span>
                 <select x-model="filterPetugas" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-400">
                     <option value="">Semua Petugas Amil</option>
                     <template x-for="p in uniquePetugasList" :key="p">
                         <option :value="p" x-text="p"></option>
                     </template>
                 </select>
-                <span class="text-slate-400" x-text="'Total Transaksi dari Server: ' + filteredTransactions.length + ' data'"></span>
+                <span class="text-slate-400" x-text="'Total Data Server: ' + filteredTransactions.length"></span>
             </div>
         </section>
 
         <!-- Grid Content: Form & Tabel Data -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- Form Input Muzakki (10 Kolom) -->
-            <div class="bg-cardBg border border-slate-800 p-6 rounded-2xl shadow-md h-fit">
-                <h2 class="text-lg font-bold mb-4 flex items-center gap-2 border-b border-slate-800 pb-3">
+            <!-- Form Input Muzakki -->
+            <div id="form-section" class="bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-md h-fit">
+                <h2 class="text-base md:text-lg font-bold mb-4 flex items-center gap-2 border-b border-slate-800 pb-3">
                     <i class="fa-solid fa-user-plus text-accentGreen"></i> Form Penerimaan ZIS
                 </h2>
                 
@@ -217,17 +236,17 @@
 
                     <button type="submit" :disabled="loading" 
                         class="w-full bg-accentGreen hover:bg-emerald-600 text-slate-950 font-semibold py-2.5 rounded-xl text-sm transition shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2">
-                        <span x-show="!loading"><i class="fa-solid fa-paper-plane"></i> Simpan & Kirim ke Sheets</span>
+                        <span x-show="!loading"><i class="fa-solid fa-paper-plane"></i> Simpan & Kirim ke Server</span>
                         <span x-show="loading"><i class="fa-solid fa-spinner animate-spin"></i> Menyimpan...</span>
                     </button>
                 </form>
             </div>
 
             <!-- Tabel Riwayat & Filter -->
-            <div class="lg:col-span-2 bg-cardBg border border-slate-800 p-6 rounded-2xl shadow-md flex flex-col">
+            <div id="table-section" class="lg:col-span-2 bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-xl flex flex-col">
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 border-b border-slate-800 pb-3">
-                    <h2 class="text-lg font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-list text-cyan-400"></i> Riwayat Data Server
+                    <h2 class="text-base md:text-lg font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-database text-cyan-400"></i> Tabel Data Server (Database)
                     </h2>
                     <div class="flex items-center gap-2 w-full sm:w-auto">
                         <input type="text" x-model="search" placeholder="Cari muzakki..." 
@@ -246,7 +265,7 @@
                 <div class="overflow-x-auto flex-1">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-800 text-xs text-slate-400 uppercase">
+                            <tr class="border-b border-slate-800 text-[11px] text-slate-400 uppercase">
                                 <th class="py-3 px-3">Waktu (WIB)</th>
                                 <th class="py-3 px-3">Petugas</th>
                                 <th class="py-3 px-3">Muzakki</th>
@@ -255,23 +274,23 @@
                                 <th class="py-3 px-3 text-center">Aksi WA</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-800/60 text-sm">
+                        <tbody class="divide-y divide-slate-800/60 text-xs md:text-sm">
                             <template x-for="item in filteredTransactions" :key="item.id">
                                 <tr class="hover:bg-slate-800/40 transition">
-                                    <td class="py-3 px-3 text-xs text-slate-400" x-text="item.timestamp"></td>
+                                    <td class="py-3 px-3 text-[11px] text-slate-400" x-text="item.timestamp"></td>
                                     <td class="py-3 px-3 text-xs font-medium text-emerald-400" x-text="item.petugas"></td>
                                     <td class="py-3 px-3 font-medium">
                                         <div x-text="item.nama"></div>
-                                        <div class="text-xs text-slate-500" x-text="item.phone"></div>
+                                        <div class="text-[11px] text-slate-500" x-text="item.phone"></div>
                                     </td>
                                     <td class="py-3 px-3 text-xs">
                                         <div class="font-medium" x-text="item.jenis"></div>
-                                        <div class="text-slate-400" x-text="item.metodeBayar + ' (' + item.bentuk + ')'"></div>
+                                        <div class="text-[11px] text-slate-400" x-text="item.metodeBayar + ' (' + item.bentuk + ')'"></div>
                                     </td>
                                     <td class="py-3 px-3 font-semibold" x-text="item.jenis === 'Zakat Fitrah' && item.bentuk === 'Beras' ? item.nominal + ' Kg' : formatRupiah(item.nominal)"></td>
                                     <td class="py-3 px-3 text-center">
                                         <button @click="sendWhatsApp(item)" title="Kirim Kwitansi ke WhatsApp" 
-                                            class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-2.5 py-1.5 rounded-lg text-xs font-medium transition inline-flex items-center gap-1.5">
+                                            class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition inline-flex items-center gap-1.5">
                                             <i class="fa-brands fa-whatsapp text-sm"></i> Kirim WA
                                         </button>
                                     </td>
@@ -279,7 +298,7 @@
                             </template>
                             <template x-if="filteredTransactions.length === 0">
                                 <tr>
-                                    <td colspan="6" class="text-center py-8 text-slate-500 text-sm" x-text="loadingData ? 'Memuat data dari server...' : 'Belum ada data atau gagal memuat.'"></td>
+                                    <td colspan="6" class="text-center py-8 text-slate-500 text-xs md:text-sm" x-text="loadingData ? 'Memuat data dari server...' : 'Belum ada data pada server.'"></td>
                                 </tr>
                             </template>
                         </tbody>
@@ -290,15 +309,46 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-slate-800 text-center py-4 text-xs text-slate-500 mt-12 space-y-1">
+    <!-- Footer Desktop -->
+    <footer class="hidden md:block border-t border-slate-800 text-center py-4 text-xs text-slate-500 mt-12 space-y-1">
         <p>Yayasan Masjid Istiqbal &bull; Data tersimpan langsung di Google Sheets secara real-time</p>
         <p class="text-slate-400 font-medium">Created by Novi Riyanto</p>
     </footer>
 
+    <!-- Mobile Navigation Dock (UI Handphone) -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-cardBg/95 backdrop-blur-md border-t border-slate-800 py-2.5 px-4 z-50 shadow-2xl">
+        <div class="flex justify-around items-center">
+            <!-- Tombol Refresh -->
+            <button @click="fetchDataFromServer" class="flex flex-col items-center text-slate-400 hover:text-purple-400 transition">
+                <i class="fa-solid fa-rotate text-lg" :class="{'animate-spin': loadingData}"></i>
+                <span class="text-[10px] mt-1 font-medium">Refresh</span>
+            </button>
+            <!-- Nav ke Form -->
+            <a href="#form-section" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 transition">
+                <i class="fa-solid fa-user-plus text-lg"></i>
+                <span class="text-[10px] mt-1 font-medium">Input Form</span>
+            </a>
+            <!-- Nav ke Summary/Statistik -->
+            <a href="#summary-section" class="flex flex-col items-center text-slate-400 hover:text-purple-400 transition">
+                <i class="fa-solid fa-chart-simple text-lg"></i>
+                <span class="text-[10px] mt-1 font-medium">Summary</span>
+            </a>
+            <!-- Nav ke Tabel Server -->
+            <a href="#table-section" class="flex flex-col items-center text-slate-400 hover:text-cyan-400 transition">
+                <i class="fa-solid fa-database text-lg"></i>
+                <span class="text-[10px] mt-1 font-medium">Data Server</span>
+            </a>
+            <!-- Tombol Excel -->
+            <button @click="exportToExcel" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 transition">
+                <i class="fa-solid fa-file-excel text-lg"></i>
+                <span class="text-[10px] mt-1 font-medium">Excel</span>
+            </button>
+        </div>
+    </nav>
+
     <!-- Alpine.js Logic -->
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyLwOK1bEk7ufmGHEtTOEX9xmcJq0Qmb7GEcSnt91TBrUQ_I14iZ_wMuP4jfDyuvgVC/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwQDvoVQZvyZDXDCfKTI34oTw4r9tH1vOHBybXwhFeMOV0v5lPDhLVUoFLkMJR-uy_U/exec";
 
         function zakatApp() {
             return {
@@ -325,7 +375,7 @@
                     keterangan: ''
                 },
 
-                // Fungsi untuk mengambil data langsung dari Google Sheets via doGet
+                // Ambil data langsung dari Google Sheets via doGet
                 async fetchDataFromServer() {
                     this.loadingData = true;
                     try {
@@ -412,7 +462,7 @@
                             keterangan: ''
                         };
 
-                        // Ambil ulang data terbaru dari server agar langsung tampil di tabel
+                        // Ambil ulang data terbaru dari server
                         await this.fetchDataFromServer();
                     } catch (error) {
                         alert('Gagal mengirim data. Periksa koneksi internet Anda.');
@@ -476,7 +526,7 @@
                         .reduce((sum, t) => sum + (Number(t.nominal) || 0), 0);
                 },
 
-                get totalMal() {
+                    get totalMal() {
                     return this.filteredTransactions
                         .filter(t => t.jenis === 'Zakat Mal')
                         .reduce((sum, t) => sum + (Number(t.nominal) || 0), 0);
