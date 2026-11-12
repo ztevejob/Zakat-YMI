@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pencatatan ZIS - Yayasan Masjid Istiqbal</title>
+    <title>ZIS Yayasan Masjid Istiqlal - Ramadan</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -47,8 +47,8 @@
                         <i class="fa-solid fa-mosque text-xl"></i>
                     </div>
                     <div class="truncate">
-                        <h1 class="text-base md:text-xl font-bold tracking-wide truncate">ZIS Yayasan Masjid Istiqbal</h1>
-                        <p class="text-[11px] md:text-xs text-slate-400 truncate">Pencatatan Kolektif Amil Zakat & Sedekah</p>
+                        <h1 class="text-base md:text-xl font-bold tracking-wide truncate">ZIS Yayasan Masjid Istiqlal</h1>
+                        <p class="text-[11px] md:text-xs text-slate-400 truncate">Pengelolaan Zakat, Infak & Sedekah Ramadan</p>
                     </div>
                 </div>
             </div>
@@ -320,7 +320,7 @@
                         <tbody class="divide-y divide-slate-800/60 text-xs md:text-sm">
                             <template x-for="item in filteredTransactions" :key="item.id">
                                 <tr class="hover:bg-slate-800/40 transition">
-                                    <td class="py-3 px-3 text-[11px] text-slate-400" x-text="item.timestamp"></td>
+                                    <td class="py-3 px-3 text-[11px] text-slate-400" x-text="formatWIB(item.timestamp)"></td>
                                     <td class="py-3 px-3 text-xs font-medium text-emerald-400" x-text="item.petugas"></td>
                                     <td class="py-3 px-3 font-medium">
                                         <div x-text="item.nama"></div>
@@ -370,6 +370,21 @@
                         <div class="text-xs bg-cardBg border border-slate-700 px-3 py-1.5 rounded-lg text-slate-300">
                             <i class="fa-regular fa-calendar-days text-purple-400 mr-1.5"></i> <span x-text="formattedCurrentDate"></span>
                         </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-purple-900/30 to-slate-900 border border-purple-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-purple-600/20 text-purple-400 p-2.5 rounded-xl border border-purple-500/30">
+                            <i class="fa-solid fa-hourglass-half text-lg animate-pulse"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs text-slate-400">Menuju Waktu Sholat <strong class="text-white" x-text="nextPrayerName"></strong> (WIB)</div>
+                            <div class="text-lg font-bold text-emerald-400" x-text="countdownTimer">--:--:--</div>
+                        </div>
+                    </div>
+                    <div class="text-xs bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-slate-400">
+                        Imsak: <span class="text-slate-200 font-semibold" x-text="prayerTimes.Imsak ? prayerTimes.Imsak + ' WIB' : '--:--'"></span>
                     </div>
                 </div>
 
@@ -424,21 +439,6 @@
                         <div class="text-[11px] mt-2 font-medium" :class="activePrayer === 'Isya' ? 'text-emerald-800' : 'text-slate-400'" x-show="activePrayer === 'Isya'">Sedang Berlangsung</div>
                     </div>
 
-                </div>
-
-                <div class="bg-gradient-to-r from-purple-900/30 to-slate-900 border border-purple-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-purple-600/20 text-purple-400 p-2.5 rounded-xl border border-purple-500/30">
-                            <i class="fa-solid fa-hourglass-half text-lg animate-pulse"></i>
-                        </div>
-                        <div>
-                            <div class="text-xs text-slate-400">Menuju Waktu Sholat <strong class="text-white" x-text="nextPrayerName"></strong> (WIB)</div>
-                            <div class="text-lg font-bold text-emerald-400" x-text="countdownTimer">--:--:--</div>
-                        </div>
-                    </div>
-                    <div class="text-xs bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-slate-400">
-                        Imsak: <span class="text-slate-200 font-semibold" x-text="prayerTimes.Imsak ? prayerTimes.Imsak + ' WIB' : '--:--'"></span>
-                    </div>
                 </div>
 
             </div>
@@ -739,6 +739,31 @@
                     }
                 },
 
+                formatWIB(timestamp) {
+                    if (timestamp === null || timestamp === undefined || timestamp === '') return '-';
+
+                    const raw = String(timestamp).trim();
+
+                    // Pertahankan format WIB lama agar tidak dikonversi dua kali.
+                    if (/\\bWIB\\b/i.test(raw)) return raw;
+
+                    // ISO timestamp berakhiran Z dibaca sebagai UTC,
+                    // lalu ditampilkan dalam zona waktu Asia/Jakarta (WIB).
+                    const date = new Date(raw);
+                    if (Number.isNaN(date.getTime())) return raw;
+
+                    return new Intl.DateTimeFormat('id-ID', {
+                        timeZone: 'Asia/Jakarta',
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hourCycle: 'h23'
+                    }).format(date) + ' WIB';
+                },
+
                 formatRupiah(value) {
                     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value || 0);
                 },
@@ -756,7 +781,7 @@
                     let pesan = `*Bismillah, Terima Kasih*%0a%0a` +
                                 `Telah diterima setoran ZIS di Yayasan Masjid Istiqbal dengan rincian:%0a%0a` +
                                 `🏛️ *BUKTI PENERIMAAN ZIS*%0a` +
-                                `📅 Waktu: ${item.timestamp}%0a` +
+                                `📅 Waktu: ${this.formatWIB(item.timestamp)}%0a` +
                                 `👤 Muzakki: *${item.nama}*%0a` +
                                 `📦 Jenis Dana: ${item.jenis}%0a` +
                                 `💳 Metode: ${item.metodeBayar} (${item.bentuk})%0a` +
@@ -800,7 +825,7 @@
                             </div>
                             <div class="title">BUKTI PENERIMAAN ZIS (KWITANSI RESMI)</div>
                             <table class="details">
-                                <tr><th>No. Transaksi / Waktu</th><td>${item.timestamp}</td></tr>
+                                <tr><th>No. Transaksi / Waktu</th><td>${this.formatWIB(item.timestamp)}</td></tr>
                                 <tr><th>Nama Muzakki</th><td><b>${item.nama}</b></td></tr>
                                 <tr><th>No. Telepon / WA</th><td>${item.phone}</td></tr>
                                 <tr><th>Jenis Dana</th><td><b>${item.jenis}</b></td></tr>
@@ -900,7 +925,7 @@
                     }
 
                     let dataExcel = this.transactions.map(t => ({
-                        "Timestamp": t.timestamp,
+                        "Timestamp": this.formatWIB(t.timestamp),
                         "Nama Muzakki": t.nama,
                         "No Telepon": t.phone,
                         "Petugas Amil": t.petugas,
