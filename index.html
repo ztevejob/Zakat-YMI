@@ -40,31 +40,50 @@
 
     <!-- Header / Navbar -->
     <header class="bg-cardBg border-b border-slate-800 sticky top-0 z-40 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 py-3.5 flex justify-between items-center gap-3">
-            <div class="flex items-center space-x-3 overflow-hidden">
-                <div class="bg-accentGreen/10 p-2.5 rounded-xl border border-accentGreen/30 text-accentGreen shrink-0">
-                    <i class="fa-solid fa-mosque text-xl"></i>
-                </div>
-                <div class="truncate">
-                    <h1 class="text-base md:text-xl font-bold tracking-wide truncate">ZIS Yayasan Masjid Istiqbal</h1>
-                    <p class="text-[11px] md:text-xs text-slate-400 truncate">Pencatatan Kolektif Amil Zakat & Sedekah</p>
+        <div class="max-w-7xl mx-auto px-4 py-3.5 flex flex-col md:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3 overflow-hidden w-full md:w-auto justify-between md:justify-start">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-accentGreen/10 p-2.5 rounded-xl border border-accentGreen/30 text-accentGreen shrink-0">
+                        <i class="fa-solid fa-mosque text-xl"></i>
+                    </div>
+                    <div class="truncate">
+                        <h1 class="text-base md:text-xl font-bold tracking-wide truncate">ZIS Yayasan Masjid Istiqbal</h1>
+                        <p class="text-[11px] md:text-xs text-slate-400 truncate">Pencatatan Kolektif Amil Zakat & Sedekah</p>
+                    </div>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <span class="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-accentGreen border border-emerald-500/20 font-medium hidden sm:flex items-center gap-1.5">
-                    <i class="fa-solid fa-cloud-arrow-up" :class="{'animate-spin': loadingData}"></i> 
-                    <span x-text="loadingData ? 'Memuat Server...' : 'Server Connected'"></span>
-                </span>
-                <button @click="fetchDataFromServer" title="Ambil data terbaru dari server" class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 px-3 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2">
-                    <i class="fa-solid fa-rotate" :class="{'animate-spin': loadingData}"></i> <span class="hidden sm:inline">Refresh</span>
+
+            <!-- MENU NAVBAR DESKTOP -->
+            <div class="hidden md:flex items-center gap-2">
+                <button @click="currentTab = 'summary'" :class="currentTab === 'summary' ? 'bg-purple-600/30 text-purple-300 border-purple-500/50' : 'bg-slate-800/60 text-slate-300 border-slate-700'" class="border px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-chart-simple"></i> Summary & Petugas
                 </button>
-                <button @click="exportToExcel" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-sm font-medium transition flex items-center gap-2 shadow-md">
-                    <i class="fa-solid fa-file-excel"></i> <span class="hidden sm:inline">Ekspor Excel</span>
+                <button @click="checkFormPin" :class="currentTab === 'form' ? 'bg-emerald-600/30 text-emerald-300 border-emerald-500/50' : 'bg-slate-800/60 text-slate-300 border-slate-700'" class="border px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-plus"></i> Input Form (PIN)
+                </button>
+                <button @click="currentTab = 'table'; fetchDataFromServer()" :class="currentTab === 'table' ? 'bg-cyan-600/30 text-cyan-300 border-cyan-500/50' : 'bg-slate-800/60 text-slate-300 border-slate-700'" class="border px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-database"></i> Database Server
+                </button>
+                <button @click="currentTab = 'sholat'; fetchPrayerTimes()" :class="currentTab === 'sholat' ? 'bg-amber-600/30 text-amber-300 border-amber-500/50' : 'bg-slate-800/60 text-slate-300 border-slate-700'" class="border px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-clock"></i> Jadwal Sholat
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                <span class="text-xs px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-accentGreen border border-emerald-500/20 font-medium hidden sm:flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud-arrow-up" :class="{'animate-spin': loadingData}"></i> 
+                    <span x-text="loadingData ? 'Memuat...' : 'Connected'"></span>
+                </span>
+                <button @click="fetchDataFromServer" title="Refresh" class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate" :class="{'animate-spin': loadingData}"></i> Refresh
+                </button>
+                <button @click="exportToExcel" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 shadow-md">
+                    <i class="fa-solid fa-file-excel"></i> Excel
                 </button>
             </div>
         </div>
 
-        <!-- Gauge Bar Loading Dipindah ke bawah Header -->
+        <!-- Gauge Bar Loading di bawah Header -->
         <div class="w-full h-1 bg-transparent overflow-hidden" x-show="loadingData" x-transition.opacity>
             <div class="h-full bg-gradient-to-r from-purple-500 via-emerald-400 to-cyan-400 animate-pulse w-full origin-left transform" style="animation: indeterminate 1.5s infinite linear;"></div>
         </div>
@@ -81,8 +100,8 @@
     <!-- Main Container -->
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-        <!-- KONTEN 1: PANEL SUMMARY (Tampil di Desktop, atau tab 'summary' di Mobile) -->
-        <section x-show="window.innerWidth >= 768 || currentTab === 'summary'" x-transition class="space-y-6">
+        <!-- TAB 1: SUMMARY & REKAPITULASI PER PETUGAS -->
+        <section x-show="currentTab === 'summary'" x-transition class="space-y-6">
             <div class="bg-slate-900 border border-purple-500/30 p-5 md:p-6 rounded-2xl shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                     <div class="flex items-center gap-2 text-purple-400 font-bold text-sm md:text-base">
@@ -94,7 +113,6 @@
                     </div>
                 </div>
 
-                <!-- Summary Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-cardBg border border-slate-800 p-4 rounded-xl shadow-md">
                         <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Fitrah (Uang, Beras & Jiwa)</p>
@@ -126,12 +144,30 @@
                     </div>
                 </div>
 
-                <!-- Filter Petugas -->
+                <!-- Rekap Per Petugas Amil -->
+                <div class="pt-4 border-t border-slate-800">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3"><i class="fa-solid fa-users text-purple-400"></i> Rekap Perolehan Per Petugas Amil</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        <template x-for="stat in petugasStats" :key="stat.nama">
+                            <div class="bg-slate-950 border border-slate-800 p-3 rounded-xl flex justify-between items-center">
+                                <div>
+                                    <div class="text-xs font-bold text-emerald-400" x-text="stat.nama"></div>
+                                    <div class="text-[10px] text-slate-400" x-text="stat.count + ' Transaksi tercatat'"></div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs font-bold text-white" x-text="formatRupiah(stat.totalUang)"></div>
+                                    <div class="text-[10px] text-amber-400" x-text="stat.totalBeras > 0 ? stat.totalBeras + ' Kg Beras' : ''"></div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
                 <div class="flex flex-wrap items-center gap-3 pt-2 text-xs">
                     <span class="text-slate-300 font-medium"><i class="fa-solid fa-filter"></i> Filter Petugas:</span>
                     <select x-model="filterPetugas" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-400">
                         <option value="">Semua Petugas Amil</option>
-                        <template x-for="p in uniquePetugasList" :key="p">
+                        <template x-for="p in listPetugasAmil" :key="p">
                             <option :value="p" x-text="p"></option>
                         </template>
                     </select>
@@ -140,26 +176,28 @@
             </div>
         </section>
 
-        <!-- GRID UTAMA FORM & TABEL -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- FORM INPUT -->
-            <section x-show="window.innerWidth >= 768 || currentTab === 'form'" x-transition class="bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-md h-fit">
+        <!-- TAB 2: FORM INPUT MUZAKKI -->
+        <section x-show="currentTab === 'form'" x-transition class="space-y-6 max-w-2xl mx-auto">
+            <div class="bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-md">
                 <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
                     <h2 class="text-base md:text-lg font-bold flex items-center gap-2">
                         <i class="fa-solid fa-user-plus text-accentGreen"></i> Form Penerimaan ZIS
                     </h2>
-                    <button @click="toggleFormPin" class="text-xs bg-purple-600/20 text-purple-400 border border-purple-500/30 px-2.5 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5">
-                        <i class="fa-solid" :class="showForm ? 'fa-lock-open text-emerald-400' : 'fa-lock'"></i>
-                        <span x-text="showForm ? 'Tutup Form' : 'Buka Form (PIN)'"></span>
-                    </button>
+                    <span class="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
+                        <i class="fa-solid fa-shield-halved"></i> Terverifikasi PIN
+                    </span>
                 </div>
                 
-                <form @submit.prevent="submitTransaction" class="space-y-4" x-show="showForm" x-transition>
+                <form @submit.prevent="submitTransaction" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">Nama Petugas Amil</label>
-                        <input type="text" x-model="form.petugas" required placeholder="Contoh: Ust. Ahmad / Pak Budi" 
-                            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen">
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Nama Petugas Amil (Pilih dari Daftar)</label>
+                        <select x-model="form.petugas" required 
+                            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen text-slate-200">
+                            <option value="">-- Pilih Petugas Amil --</option>
+                            <template x-for="p in listPetugasAmil" :key="p">
+                                <option :value="p" x-text="p"></option>
+                            </template>
+                        </select>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
@@ -244,15 +282,12 @@
                         <span x-show="loading"><i class="fa-solid fa-spinner animate-spin"></i> Menyimpan...</span>
                     </button>
                 </form>
+            </div>
+        </section>
 
-                <div x-show="!showForm" class="text-center py-8 text-slate-500 text-xs">
-                    <i class="fa-solid fa-lock text-2xl mb-2 text-purple-400"></i>
-                    <p>Form input terkunci untuk keamanan.<br>Klik tombol di atas atau gunakan PIN (3333) untuk membuka.</p>
-                </div>
-            </section>
-
-            <!-- TABEL DATABASE SERVER -->
-            <section x-show="window.innerWidth >= 768 || currentTab === 'table'" x-transition class="lg:col-span-2 bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-xl flex flex-col">
+        <!-- TAB 3: TABEL DATABASE SERVER -->
+        <section x-show="currentTab === 'table'" x-transition class="space-y-6">
+            <div class="bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-xl flex flex-col">
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 border-b border-slate-800 pb-3">
                     <h2 class="text-base md:text-lg font-bold flex items-center gap-2">
                         <i class="fa-solid fa-database text-cyan-400"></i> Tabel Data Server (Database)
@@ -270,7 +305,6 @@
                     </div>
                 </div>
 
-                <!-- Tabel Data -->
                 <div class="overflow-x-auto flex-1">
                     <table class="w-full text-left border-collapse">
                         <thead>
@@ -280,7 +314,7 @@
                                 <th class="py-3 px-3">Muzakki</th>
                                 <th class="py-3 px-3">Jenis & Metode</th>
                                 <th class="py-3 px-3">Nominal / Berat</th>
-                                <th class="py-3 px-3 text-center">Aksi WA</th>
+                                <th class="py-3 px-3 text-center">Aksi (WA & PDF)</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-800/60 text-xs md:text-sm">
@@ -297,10 +331,14 @@
                                         <div class="text-[11px] text-slate-400" x-text="item.metodeBayar + ' (' + item.bentuk + ')'"></div>
                                     </td>
                                     <td class="py-3 px-3 font-semibold" x-text="item.jenis === 'Zakat Fitrah' && item.bentuk === 'Beras' ? item.nominal + ' Kg' : formatRupiah(item.nominal)"></td>
-                                    <td class="py-3 px-3 text-center">
-                                        <button @click="sendWhatsApp(item)" title="Kirim Kwitansi ke WhatsApp" 
-                                            class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition inline-flex items-center gap-1.5">
-                                            <i class="fa-brands fa-whatsapp text-sm"></i> Kirim WA
+                                    <td class="py-3 px-3 text-center space-x-1">
+                                        <button @click="sendWhatsApp(item)" title="Kirim ke WhatsApp" 
+                                            class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 px-2 py-1 rounded-lg text-[11px] font-medium transition inline-flex items-center gap-1">
+                                            <i class="fa-brands fa-whatsapp"></i> WA
+                                        </button>
+                                        <button @click="printKwitansiPDF(item)" title="Cetak Kwitansi PDF Kop Yayasan" 
+                                            class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 border border-purple-500/30 px-2 py-1 rounded-lg text-[11px] font-medium transition inline-flex items-center gap-1">
+                                            <i class="fa-solid fa-file-pdf"></i> PDF
                                         </button>
                                     </td>
                                 </tr>
@@ -313,44 +351,96 @@
                         </tbody>
                     </table>
                 </div>
-            </section>
+            </div>
+        </section>
 
-        </div>
-
-        <!-- JADWAL SHOLAT -->
-        <section x-show="window.innerWidth >= 768 || currentTab === 'sholat'" x-transition class="max-w-xl mx-auto pt-4">
-            <div class="bg-cardBg border border-slate-800 p-6 rounded-2xl shadow-xl text-center space-y-4">
-                <div class="inline-block bg-emerald-500/10 text-accentGreen p-3 rounded-2xl border border-emerald-500/20">
-                    <i class="fa-solid fa-kaaba text-3xl"></i>
-                </div>
-                <div>
-                    <h2 class="text-lg font-bold">Jadwal Sholat Harian</h2>
-                    <p class="text-xs text-slate-400">Wilayah Surabaya & Sekitarnya</p>
-                </div>
-
-                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 divide-y divide-slate-800 text-sm">
-                    <div class="flex justify-between py-2.5 font-medium">
-                        <span class="text-slate-400"><i class="fa-solid fa-cloud-sun text-amber-400 mr-2"></i> Subuh</span>
-                        <span class="text-emerald-400 font-bold" x-text="prayerTimes.Fajr || '--:--'"></span>
+        <!-- TAB 4: JADWAL SHOLAT (WIB) -->
+        <section x-show="currentTab === 'sholat'" x-transition class="space-y-6">
+            <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-6">
+                
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800 pb-4">
+                    <div>
+                        <p class="text-xs text-slate-400">Waktu Salat di</p>
+                        <h2 class="text-xl md:text-2xl font-bold text-white tracking-wide">Surabaya, Indonesia (WIB)</h2>
                     </div>
-                    <div class="flex justify-between py-2.5 font-medium">
-                        <span class="text-slate-400"><i class="fa-solid fa-sun text-yellow-400 mr-2"></i> Dzuhur</span>
-                        <span class="text-emerald-400 font-bold" x-text="prayerTimes.Dhuhr || '--:--'"></span>
-                    </div>
-                    <div class="flex justify-between py-2.5 font-medium">
-                        <span class="text-slate-400"><i class="fa-solid fa-cloud-sun text-orange-400 mr-2"></i> Ashar</span>
-                        <span class="text-emerald-400 font-bold" x-text="prayerTimes.Asr || '--:--'"></span>
-                    </div>
-                    <div class="flex justify-between py-2.5 font-medium">
-                        <span class="text-slate-400"><i class="fa-solid fa-moon text-purple-400 mr-2"></i> Maghrib</span>
-                        <span class="text-emerald-400 font-bold" x-text="prayerTimes.Maghrib || '--:--'"></span>
-                    </div>
-                    <div class="flex justify-between py-2.5 font-medium">
-                        <span class="text-slate-400"><i class="fa-solid fa-star-and-crescent text-indigo-400 mr-2"></i> Isya'</span>
-                        <span class="text-emerald-400 font-bold" x-text="prayerTimes.Isha || '--:--'"></span>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="bg-emerald-500/10 border border-emerald-500/20 text-accentGreen text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-check"></i> KEMENAG (Kementerian Agama RI) - WIB
+                        </span>
+                        <div class="text-xs bg-cardBg border border-slate-700 px-3 py-1.5 rounded-lg text-slate-300">
+                            <i class="fa-regular fa-calendar-days text-purple-400 mr-1.5"></i> <span x-text="formattedCurrentDate"></span>
+                        </div>
                     </div>
                 </div>
-                <p class="text-[10px] text-slate-500">Sinkronisasi otomatis berdasarkan tanggal hari ini.</p>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div class="p-5 rounded-2xl border transition relative overflow-hidden" 
+                        :class="activePrayer === 'Subuh' ? 'bg-white text-slate-950 border-accentGreen shadow-xl scale-[1.02]' : 'bg-cardBg text-slate-100 border-slate-800'">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-semibold" :class="activePrayer === 'Subuh' ? 'text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md' : 'text-slate-400'">Subuh</span>
+                            <i class="fa-solid fa-cloud-sun text-amber-400"></i>
+                        </div>
+                        <div class="text-2xl md:text-3xl font-black tracking-tight" x-text="prayerTimes.Fajr ? prayerTimes.Fajr + ' WIB' : '--:--'"></div>
+                        <div class="text-[11px] mt-2 font-medium" :class="activePrayer === 'Subuh' ? 'text-emerald-800' : 'text-slate-400'" x-show="activePrayer === 'Subuh'">Sedang Berlangsung</div>
+                    </div>
+
+                    <div class="p-5 rounded-2xl border transition relative overflow-hidden" 
+                        :class="activePrayer === 'Dzuhur' ? 'bg-white text-slate-950 border-accentGreen shadow-xl scale-[1.02]' : 'bg-cardBg text-slate-100 border-slate-800'">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-semibold" :class="activePrayer === 'Dzuhur' ? 'text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md' : 'text-slate-400'">Dzuhur</span>
+                            <i class="fa-solid fa-sun text-yellow-400"></i>
+                        </div>
+                        <div class="text-2xl md:text-3xl font-black tracking-tight" x-text="prayerTimes.Dhuhr ? prayerTimes.Dhuhr + ' WIB' : '--:--'"></div>
+                        <div class="text-[11px] mt-2 font-medium" :class="activePrayer === 'Dzuhur' ? 'text-emerald-800' : 'text-slate-400'" x-show="activePrayer === 'Dzuhur'">Sedang Berlangsung</div>
+                    </div>
+
+                    <div class="p-5 rounded-2xl border transition relative overflow-hidden" 
+                        :class="activePrayer === 'Ashar' ? 'bg-white text-slate-950 border-accentGreen shadow-xl scale-[1.02]' : 'bg-cardBg text-slate-100 border-slate-800'">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-semibold" :class="activePrayer === 'Ashar' ? 'text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md' : 'text-slate-400'">Ashar</span>
+                            <i class="fa-solid fa-cloud-sun text-orange-400"></i>
+                        </div>
+                        <div class="text-2xl md:text-3xl font-black tracking-tight" x-text="prayerTimes.Asr ? prayerTimes.Asr + ' WIB' : '--:--'"></div>
+                        <div class="text-[11px] mt-2 font-medium" :class="activePrayer === 'Ashar' ? 'text-emerald-800' : 'text-slate-400'" x-show="activePrayer === 'Ashar'">Sedang Berlangsung</div>
+                    </div>
+
+                    <div class="p-5 rounded-2xl border transition relative overflow-hidden" 
+                        :class="activePrayer === 'Maghrib' ? 'bg-white text-slate-950 border-accentGreen shadow-xl scale-[1.02]' : 'bg-cardBg text-slate-100 border-slate-800'">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-semibold" :class="activePrayer === 'Maghrib' ? 'text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md' : 'text-slate-400'">Maghrib</span>
+                            <i class="fa-solid fa-moon text-purple-400"></i>
+                        </div>
+                        <div class="text-2xl md:text-3xl font-black tracking-tight" x-text="prayerTimes.Maghrib ? prayerTimes.Maghrib + ' WIB' : '--:--'"></div>
+                        <div class="text-[11px] mt-2 font-medium" :class="activePrayer === 'Maghrib' ? 'text-emerald-800' : 'text-slate-400'" x-show="activePrayer === 'Maghrib'">Sedang Berlangsung</div>
+                    </div>
+
+                    <div class="p-5 rounded-2xl border transition relative overflow-hidden col-span-2 sm:col-span-1" 
+                        :class="activePrayer === 'Isya' ? 'bg-white text-slate-950 border-accentGreen shadow-xl scale-[1.02]' : 'bg-cardBg text-slate-100 border-slate-800'">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs font-semibold" :class="activePrayer === 'Isya' ? 'text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md' : 'text-slate-400'">Isya'</span>
+                            <i class="fa-solid fa-star-and-crescent text-indigo-400"></i>
+                        </div>
+                        <div class="text-2xl md:text-3xl font-black tracking-tight" x-text="prayerTimes.Isha ? prayerTimes.Isha + ' WIB' : '--:--'"></div>
+                        <div class="text-[11px] mt-2 font-medium" :class="activePrayer === 'Isya' ? 'text-emerald-800' : 'text-slate-400'" x-show="activePrayer === 'Isya'">Sedang Berlangsung</div>
+                    </div>
+
+                </div>
+
+                <div class="bg-gradient-to-r from-purple-900/30 to-slate-900 border border-purple-500/30 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-purple-600/20 text-purple-400 p-2.5 rounded-xl border border-purple-500/30">
+                            <i class="fa-solid fa-hourglass-half text-lg animate-pulse"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs text-slate-400">Menuju Waktu Sholat <strong class="text-white" x-text="nextPrayerName"></strong> (WIB)</div>
+                            <div class="text-lg font-bold text-emerald-400" x-text="countdownTimer">--:--:--</div>
+                        </div>
+                    </div>
+                    <div class="text-xs bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 text-slate-400">
+                        Imsak: <span class="text-slate-200 font-semibold" x-text="prayerTimes.Imsak ? prayerTimes.Imsak + ' WIB' : '--:--'"></span>
+                    </div>
+                </div>
+
             </div>
         </section>
 
@@ -358,34 +448,29 @@
 
     <!-- Footer Desktop -->
     <footer class="border-t border-slate-800 text-center py-4 text-xs text-slate-500 mt-12 space-y-1">
-        <p>Yayasan Masjid Istiqbal &bull; real time</p>
+        <p>Yayasan Masjid Istiqbal &bull; Data tersimpan langsung di Google Sheets secara real-time</p>
         <p class="text-slate-400 font-medium">Created by Novi Riyanto</p>
     </footer>
 
-    <!-- Mobile Navigation Dock (Hanya Tampil di HP / Layar Kecil) -->
+    <!-- Mobile Navigation Dock -->
     <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-cardBg/95 backdrop-blur-md border-t border-slate-800 py-2.5 px-3 z-50 shadow-2xl">
         <div class="flex justify-around items-center">
-            <!-- 1. Menu Summary -->
             <button @click="currentTab = 'summary'" :class="currentTab === 'summary' ? 'text-accentPurple' : 'text-slate-400'" class="flex flex-col items-center transition">
                 <i class="fa-solid fa-chart-simple text-lg"></i>
                 <span class="text-[10px] mt-1 font-medium">Summary</span>
             </button>
-            <!-- 2. Menu Form (PIN Protected) -->
             <button @click="checkFormPin" :class="currentTab === 'form' ? 'text-accentGreen' : 'text-slate-400'" class="flex flex-col items-center transition">
                 <i class="fa-solid fa-user-plus text-lg"></i>
                 <span class="text-[10px] mt-1 font-medium">Input Form</span>
             </button>
-            <!-- 3. Menu Tabel Data Server -->
             <button @click="currentTab = 'table'; fetchDataFromServer()" :class="currentTab === 'table' ? 'text-cyan-400' : 'text-slate-400'" class="flex flex-col items-center transition">
                 <i class="fa-solid fa-database text-lg"></i>
                 <span class="text-[10px] mt-1 font-medium">Database</span>
             </button>
-            <!-- 4. Menu Waktu Sholat -->
             <button @click="currentTab = 'sholat'; fetchPrayerTimes()" :class="currentTab === 'sholat' ? 'text-amber-400' : 'text-slate-400'" class="flex flex-col items-center transition">
                 <i class="fa-solid fa-clock text-lg"></i>
                 <span class="text-[10px] mt-1 font-medium">Sholat</span>
             </button>
-            <!-- 5. Menu Excel -->
             <button @click="exportToExcel" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 transition">
                 <i class="fa-solid fa-file-excel text-lg"></i>
                 <span class="text-[10px] mt-1 font-medium">Excel</span>
@@ -409,6 +494,19 @@
                 showForm: false, 
                 adminPin: "3333",
                 prayerTimes: {},
+                nextPrayerName: '-',
+                activePrayer: '-',
+                countdownTimer: '--:--',
+                formattedCurrentDate: '',
+
+                listPetugasAmil: [
+                    "Ust. Ahmad",
+                    "Pak Budi",
+                    "Ust. Farhan",
+                    "Pak Nurdin",
+                    "Mas Roni",
+                    "Ustadzah Aminah"
+                ],
 
                 tarifFitrahUang: 50000,
                 tarifFitrahBeras: 3.5,
@@ -428,19 +526,34 @@
                 initApp() {
                     this.fetchDataFromServer();
                     this.fetchPrayerTimes();
+                    this.setCurrentDate();
+                    setInterval(() => {
+                        this.calculatePrayerStatus();
+                    }, 1000);
                 },
 
-                toggleFormPin() {
-                    if (this.showForm) {
-                        this.showForm = false;
-                    } else {
-                        let pin = prompt("Masukkan PIN Petugas Amil:");
-                        if (pin === this.adminPin) {
-                            this.showForm = true;
-                        } else if (pin !== null) {
-                            alert("PIN Salah! Akses form ditolak.");
-                        }
+                playSuccessSound() {
+                    try {
+                        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+                        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(audioCtx.currentTime + 0.4);
+                    } catch (e) {
+                        console.log("Audio not supported", e);
                     }
+                },
+
+                setCurrentDate() {
+                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    this.formattedCurrentDate = new Date().toLocaleDateString('id-ID', options) + " WIB";
                 },
 
                 checkFormPin() {
@@ -457,13 +570,76 @@
                     try {
                         let today = new Date();
                         let dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
-                        let res = await fetch(`https://api.aladhan.com/v1/timingsByCity/${dateStr}?city=Surabaya&country=Indonesia&method=11`);
+                        // Menggunakan zona waktu WIB (Asia/Jakarta)
+                        let res = await fetch(`https://api.aladhan.com/v1/timingsByCity/${dateStr}?city=Surabaya&country=Indonesia&method=11&tune=0,0,0,0,0,0,0,0,0`);
                         let data = await res.json();
                         if (data && data.data) {
                             this.prayerTimes = data.data.timings;
                         }
                     } catch (e) {
                         console.error("Gagal memuat jadwal sholat", e);
+                    }
+                },
+
+                calculatePrayerStatus() {
+                    if (!this.prayerTimes.Fajr) return;
+                    const now = new Date();
+                    const prayers = [
+                        { name: 'Subuh', time: this.prayerTimes.Fajr },
+                        { name: 'Dzuhur', time: this.prayerTimes.Dhuhr },
+                        { name: 'Ashar', time: this.prayerTimes.Asr },
+                        { name: 'Maghrib', time: this.prayerTimes.Maghrib },
+                        { name: 'Isya', time: this.prayerTimes.Isha }
+                    ];
+
+                    let targetPrayer = null;
+                    let targetTimeDate = null;
+                    let currentActive = 'Isya';
+
+                    for (let i = 0; i < prayers.length; i++) {
+                        let [h, m] = prayers[i].time.split(':');
+                        let pDate = new Date();
+                        pDate.setHours(parseInt(h), parseInt(m), 0, 0);
+
+                        let nextPDate = new Date(pDate);
+                        if (i < prayers.length - 1) {
+                            let [nh, nm] = prayers[i+1].time.split(':');
+                            nextPDate.setHours(parseInt(nh), parseInt(nm), 0, 0);
+                        } else {
+                            nextPDate.setDate(nextPDate.getDate() + 1);
+                            let [fh, fm] = prayers[0].time.split(':');
+                            nextPDate.setHours(parseInt(fh), parseInt(fm), 0, 0);
+                        }
+
+                        if (now >= pDate && now < nextPDate) {
+                            currentActive = prayers[i].name;
+                        }
+                        if (now < pDate && !targetPrayer) {
+                            targetPrayer = prayers[i].name;
+                            targetTimeDate = pDate;
+                        }
+                    }
+
+                    if (!targetPrayer) {
+                        targetPrayer = 'Subuh (Besok)';
+                        let [h, m] = this.prayerTimes.Fajr.split(':');
+                        let pDate = new Date();
+                        pDate.setDate(pDate.getDate() + 1);
+                        pDate.setHours(parseInt(h), parseInt(m), 0, 0);
+                        targetTimeDate = pDate;
+                    }
+
+                    this.activePrayer = currentActive;
+                    this.nextPrayerName = targetPrayer;
+
+                    let diff = targetTimeDate - now;
+                    if (diff > 0) {
+                        let h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                        let m = Math.floor((diff / 1000 / 60) % 60);
+                        let s = Math.floor((diff / 1000) % 60);
+                        this.countdownTimer = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')} WIB`;
+                    } else {
+                        this.countdownTimer = "00:00:00 WIB";
                     }
                 },
 
@@ -514,7 +690,7 @@
                         hour: '2-digit',
                         minute: '2-digit',
                         second: '2-digit'
-                    });
+                    }) + ' WIB';
 
                     const payload = {
                         timestamp: timestampWIB,
@@ -537,6 +713,7 @@
                             body: JSON.stringify(payload)
                         });
 
+                        this.playSuccessSound();
                         alert('Data berhasil disimpan ke Google Sheets!');
 
                         const currentPetugas = this.form.petugas;
@@ -551,7 +728,6 @@
                             nominal: 50000,
                             keterangan: ''
                         };
-                        this.showForm = false;
                         this.currentTab = 'summary';
 
                         await this.fetchDataFromServer();
@@ -595,8 +771,81 @@
                     window.open(waUrl, '_blank');
                 },
 
+                printKwitansiPDF(item) {
+                    let nilaiBayar = item.jenis === 'Zakat Fitrah' && item.bentuk === 'Beras' 
+                        ? item.nominal + ' Kg Beras' 
+                        : this.formatRupiah(item.nominal);
+
+                    let win = window.open('', '_blank');
+                    win.document.write(`
+                        <html>
+                        <head>
+                            <title>Kwitansi ZIS - Yayasan Masjid Istiqbal</title>
+                            <style>
+                                body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+                                .kop { text-align: center; border-bottom: 3px double #333; padding-bottom: 10px; margin-bottom: 20px; }
+                                .kop h2 { margin: 0; font-size: 20px; color: #047857; text-transform: uppercase; }
+                                .kop p { margin: 3px 0; font-size: 12px; color: #555; }
+                                .title { text-align: center; font-weight: bold; font-size: 16px; margin: 20px 0; text-decoration: underline; }
+                                .details { width: 100%; border-collapse: collapse; margin-top: 15px; }
+                                .details th, .details td { border: 1px solid #ccc; padding: 8px 12px; font-size: 13px; text-align: left; }
+                                .details th { background: #f3f4f6; width: 35%; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="kop">
+                                <h2>YAYASAN MASJID ISTIQBAL SURABAYA</h2>
+                                <p>Sekretariat & Posko Pengumpulan ZIS &bull; Ngagel Rejo, Wonokromo, Surabaya</p>
+                                <p>Layanan Amil Zakat, Infak, Sedekah & Fidyah</p>
+                            </div>
+                            <div class="title">BUKTI PENERIMAAN ZIS (KWITANSI RESMI)</div>
+                            <table class="details">
+                                <tr><th>No. Transaksi / Waktu</th><td>${item.timestamp}</td></tr>
+                                <tr><th>Nama Muzakki</th><td><b>${item.nama}</b></td></tr>
+                                <tr><th>No. Telepon / WA</th><td>${item.phone}</td></tr>
+                                <tr><th>Jenis Dana</th><td><b>${item.jenis}</b></td></tr>
+                                <tr><th>Metode Pembayaran</th><td>${item.metodeBayar} (${item.bentuk})</td></tr>
+                                ${item.jenis === 'Zakat Fitrah' ? `<tr><th>Jumlah Jiwa</th><td>${item.jumlahJiwa} Jiwa</td></tr>` : ``}
+                                <tr><th>Nominal / Berat</th><td><b>${nilaiBayar}</b></td></tr>
+                                <tr><th>Keterangan</th><td>${item.keterangan}</td></tr>
+                                <tr><th>Petugas Amil Penerima</th><td><span style="color: #047857; font-weight: bold;">${item.petugas}</span></td></tr>
+                            </table>
+                            <div style="display: flex; justify-content: flex-end; margin-top: 30px;">
+                                <div style="text-align: center;">
+                                    <p>Surabaya, ${new Date().toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'})} WIB</p>
+                                    <p><b>Petugas Amil Yayasan</b></p>
+                                    <br><br><br>
+                                    <p><b>( ${item.petugas} )</b></p>
+                                </div>
+                            </div>
+                            <script>
+                                window.onload = function() { window.print(); }
+                            <\/script>
+                        </body>
+                        </html>
+                    `);
+                    win.document.close();
+                },
+
                 get uniquePetugasList() {
                     return [...new Set(this.transactions.map(t => t.petugas))];
+                },
+
+                get petugasStats() {
+                    let stats = {};
+                    this.transactions.forEach(t => {
+                        let p = t.petugas || 'Tidak Diketahui';
+                        if (!stats[p]) {
+                            stats[p] = { nama: p, count: 0, totalUang: 0, totalBeras: 0 };
+                        }
+                        stats[p].count += 1;
+                        if (t.jenis === 'Zakat Fitrah' && t.bentuk === 'Beras') {
+                            stats[p].totalBeras += Number(t.nominal) || 0;
+                        } else {
+                            stats[p].totalUang += Number(t.nominal) || 0;
+                        }
+                    });
+                    return Object.values(stats);
                 },
 
                 get totalFitrahUang() {
@@ -640,7 +889,7 @@
                         const matchSearch = (t.nama || '').toLowerCase().includes(this.search.toLowerCase());
                         const matchJenis = this.filterJenis === '' || t.jenis === this.filterJenis;
                         const matchPetugas = this.filterPetugas === '' || t.petugas === this.filterPetugas;
-                        return matchSearch && matchJenis && matchJenis;
+                        return matchSearch && matchJenis && matchPetugas;
                     });
                 },
 
