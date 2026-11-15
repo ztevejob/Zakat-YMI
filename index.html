@@ -841,6 +841,12 @@
                         ? item.nominal + ' Kg Beras' 
                         : this.formatRupiah(item.nominal);
 
+                    // Penyesuaian metode pembayaran otomatis jika beras
+                    let metodeTampil = item.metodeBayar;
+                    if (item.jenis === 'Zakat Fitrah' && item.bentuk === 'Beras' && (!metodeTampil || metodeTampil === 'Tuniy' || metodeTampil === 'Tunai')) {
+                        metodeTampil = 'Penyerahan Fisik (Beras)';
+                    }
+
                     let pesan = `*Bismillah, Terima Kasih*\n\n` +
                                 `Telah diterima setoran ZIS melalui layanan resmi:\n\n` +
                                 `*YAYASAN MASJID ISTIQBAL SURABAYA*\n` +
@@ -852,7 +858,7 @@
                                 `*Waktu:* ${this.formatWIB(item.timestamp)}\n` +
                                 `*Muzakki:* *${item.nama}*\n` +
                                 `*Jenis Dana:* ${item.jenis}\n` +
-                                `*Metode:* ${item.metodeBayar} (${item.bentuk})\n` +
+                                `*Metode:* ${metodeTampil} (${item.bentuk})\n` +
                                 (item.jenis === 'Zakat Fitrah' ? `*Jumlah Jiwa:* ${item.jumlahJiwa} Jiwa\n` : ``) +
                                 `*Nominal / Berat:* *${nilaiBayar}*\n` +
                                 `*Keterangan:* ${item.keterangan}\n` +
