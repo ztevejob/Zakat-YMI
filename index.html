@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZIS Yayasan Masjid Istiqbal - Ramadan</title>
+    <title>Yayasan Masjid Istiqbal Surabaya - ZIS</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -46,9 +46,11 @@
                     <div class="bg-accentGreen/10 p-2.5 rounded-xl border border-accentGreen/30 text-accentGreen shrink-0">
                         <i class="fa-solid fa-mosque text-xl"></i>
                     </div>
-                    <div class="truncate">
-                        <h1 class="text-base md:text-xl font-bold tracking-wide truncate">ZIS Yayasan Masjid Istiqbal</h1>
-                        <p class="text-[11px] md:text-xs text-slate-400 truncate">Pengelolaan Zakat, Infak & Sedekah Ramadan</p>
+                    <div class="truncate leading-tight">
+                        <h1 class="text-sm md:text-base font-bold tracking-wider truncate">YAYASAN MASJID ISTIQBAL</h1>
+                        <h2 class="text-xs md:text-sm font-bold tracking-widest text-emerald-400 truncate">S U R A B A Y A</h2>
+                        <p class="text-[10px] md:text-[11px] text-slate-400 truncate">Sekretariat : JL. Ngagel Rejo II / 27, Surabaya 60245</p>
+                        <p class="text-[10px] md:text-[11px] text-slate-400 truncate">Email : yayasanmasjidistiqbal@gmail.com</p>
                     </div>
                 </div>
             </div>
@@ -256,7 +258,7 @@
                                 <label class="block text-xs font-medium text-slate-300 mb-1" x-text="form.bentuk === 'Uang Tunai' ? 'Total Otomatis (Rp)' : 'Total Berat Otomatis (Kg)'"></label>
                                 <input type="number" x-model="form.nominal" readonly 
                                     class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-2 text-sm text-emerald-400 font-bold focus:outline-none cursor-not-allowed">
-                                <span class="text-[10px] text-slate-400 mt-1 block" x-text="form.bentuk === 'Uang Tunai' ? '*Otomatis (Rp 50.000 / jiwa)' : '*Otomatis (3,5 Kg / jiwa)'"></span>
+                                <span class="text-[10px] text-slate-400 mt-1 block" x-text="form.bentuk === 'Uang Tunai' ? '*Otomatis (Rp 50.000 / jiwa)' : '*Otomatis (3 Kg / jiwa)'"></span>
                             </div>
                         </div>
                     </template>
@@ -318,7 +320,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-800/60 text-xs md:text-sm">
-                            <template x-for="item in filteredTransactions" :key="item.id">
+                            <template x-for="(item, index) in filteredTransactions" :key="index">
                                 <tr class="hover:bg-slate-800/40 transition">
                                     <td class="py-3 px-3 text-[11px] text-slate-400" x-text="formatWIB(item.timestamp)"></td>
                                     <td class="py-3 px-3 text-xs font-medium text-emerald-400" x-text="item.petugas"></td>
@@ -509,7 +511,7 @@
                 ],
 
                 tarifFitrahUang: 50000,
-                tarifFitrahBeras: 3.5,
+                tarifFitrahBeras: 3,
 
                 form: {
                     petugas: '',
@@ -769,31 +771,48 @@
                 },
 
                 sendWhatsApp(item) {
-                    let phoneClean = item.phone.replace(/[^0-9]/g, '');
+                    let rawPhone = item.phone ? String(item.phone) : '';
+                    let phoneClean = rawPhone.replace(/[^0-9]/g, '');
                     if (phoneClean.startsWith('0')) {
                         phoneClean = '62' + phoneClean.slice(1);
+                    } else if (phoneClean.startsWith('8')) {
+                        phoneClean = '62' + phoneClean;
                     }
 
                     let nilaiBayar = item.jenis === 'Zakat Fitrah' && item.bentuk === 'Beras' 
                         ? item.nominal + ' Kg Beras' 
                         : this.formatRupiah(item.nominal);
 
-                    let pesan = `*Bismillah, Terima Kasih*%0a%0a` +
-                                `Telah diterima setoran ZIS di Yayasan Masjid Istiqbal dengan rincian:%0a%0a` +
-                                `🏛️ *BUKTI PENERIMAAN ZIS*%0a` +
-                                `📅 Waktu: ${this.formatWIB(item.timestamp)}%0a` +
-                                `👤 Muzakki: *${item.nama}*%0a` +
-                                `📦 Jenis Dana: ${item.jenis}%0a` +
-                                `💳 Metode: ${item.metodeBayar} (${item.bentuk})%0a` +
-                                (item.jenis === 'Zakat Fitrah' ? `👥 Jumlah Jiwa: ${item.jumlahJiwa} Jiwa%0a` : ``) +
-                                `💰 Nominal / Berat: *${nilaiBayar}*%0a` +
-                                `📝 Keterangan: ${item.keterangan}%0a` +
-                                `👨‍💼 Petugas Amil: ${item.petugas}%0a%0a` +
-                                `🙏 _"Semoga harta dan jiwa Bapak/Ibu senantiasa diberkahi, dilipatgandakan pahalanya, dan mensucikan penghasilan kita. Aamiin."_%0a%0a` +
-                                `---%0a*Yayasan Masjid Istiqbal*`;
+                    let pesan = `*Bismillah, Terima Kasih*\n\n` +
+                                `Telah diterima setoran ZIS melalui layanan resmi:\n\n` +
+                                `*YAYASAN MASJID ISTIQBAL SURABAYA*\n` +
+                                `Sekretariat : JL. Ngagel Rejo II / 27, Surabaya 60245\n` +
+                                `Email : yayasanmasjidistiqbal@gmail.com\n\n` +
+                                `---\n` +
+                                `*BUKTI PENERIMAAN ZIS*\n` +
+                                `---\n\n` +
+                                `*Waktu:* ${this.formatWIB(item.timestamp)}\n` +
+                                `*Muzakki:* *${item.nama}*\n` +
+                                `*Jenis Dana:* ${item.jenis}\n` +
+                                `*Metode:* ${item.metodeBayar} (${item.bentuk})\n` +
+                                (item.jenis === 'Zakat Fitrah' ? `*Jumlah Jiwa:* ${item.jumlahJiwa} Jiwa\n` : ``) +
+                                `*Nominal / Berat:* *${nilaiBayar}*\n` +
+                                `*Keterangan:* ${item.keterangan}\n` +
+                                `*Petugas Amil:* ${item.petugas}\n\n` +
+                                `---\n` +
+                                `_"Semoga harta dan jiwa Bapak/Ibu senantiasa diberkahi, dilipatgandakan pahalanya, dan mensucikan penghasilan kita. Aamiin."_\n\n` +
+                                `*Yayasan Masjid Istiqbal*`;
 
-                    let waUrl = `https://wa.me/${phoneClean}?text=${pesan}`;
-                    window.open(waUrl, '_blank');
+                    let waUrl = `https://api.whatsapp.com/send?phone=${phoneClean}&text=` + encodeURIComponent(pesan);
+                    
+                    // Metode aman untuk iOS & Android agar tidak diblokir browser / popup blocker
+                    let a = document.createElement('a');
+                    a.href = waUrl;
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
                 },
 
                 printKwitansiPDF(item) {
@@ -819,9 +838,10 @@
                         </head>
                         <body>
                             <div class="kop">
-                                <h2>YAYASAN MASJID ISTIQBAL SURABAYA</h2>
-                                <p>Sekretariat & Posko Pengumpulan ZIS &bull; Ngagel Rejo, Wonokromo, Surabaya</p>
-                                <p>Layanan Amil Zakat, Infak, Sedekah & Fidyah</p>
+                                <h2 style="margin: 0; font-size: 18px; color: #047857; text-transform: uppercase; font-weight: bold;">YAYASAN MASJID ISTIQBAL</h2>
+                                <h3 style="margin: 2px 0 5px 0; font-size: 14px; color: #047857; letter-spacing: 2px; font-weight: bold;">S U R A B A Y A</h3>
+                                <p style="margin: 2px 0; font-size: 11px; color: #555;">Sekretariat : JL. Ngagel Rejo II / 27, Surabaya 60245</p>
+                                <p style="margin: 2px 0; font-size: 11px; color: #555;">Email : yayasanmasjidistiqbal@gmail.com</p>
                             </div>
                             <div class="title">BUKTI PENERIMAAN ZIS (KWITANSI RESMI)</div>
                             <table class="details">
