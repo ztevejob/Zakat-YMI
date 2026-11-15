@@ -297,7 +297,7 @@
             </div>
         </section>
 
-        <!-- TAB 3: TABEL DATABASE SERVER (11 KOLOM LENGKAP & FILTER TANGGAL KEBAL) -->
+        <!-- TAB 3: TABEL DATABASE SERVER -->
         <section x-show="currentTab === 'table'" x-transition class="space-y-6">
             <div class="bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-xl flex flex-col">
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 border-b border-slate-800 pb-3">
@@ -305,12 +305,13 @@
                         <i class="fa-solid fa-database text-cyan-400"></i> Tabel Data Server (Database)
                     </h2>
                     <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <!-- Dropdown Filter Bulan Saja -->
                         <input type="month" x-model="filterBulan" title="Filter Berdasarkan Bulan" 
                             class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen text-slate-200">
-                        <input type="date" x-model="filterTanggal" title="Filter Tanggal Spesifik" 
-                            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen text-slate-200">
+                        <!-- Pencarian Muzakki -->
                         <input type="text" x-model="search" placeholder="Cari muzakki..." 
-                            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen w-full sm:w-36">
+                            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen w-full sm:w-40">
+                        <!-- Filter Jenis Dana -->
                         <select x-model="filterJenis" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen">
                             <option value="">Semua Jenis</option>
                             <option value="Zakat Fitrah">Zakat Fitrah</option>
@@ -318,7 +319,7 @@
                             <option value="Infak / Sedekah">Infak / Sedekah</option>
                             <option value="Fidyah">Fidyah</option>
                         </select>
-                        <button x-show="filterBulan || filterTanggal || filterJenis || search" @click="filterBulan = ''; filterTanggal = ''; filterJenis = ''; search = ''" class="text-xs text-purple-400 hover:text-purple-300 px-2 py-1 bg-purple-900/20 rounded-lg border border-purple-500/30">Reset</button>
+                        <button x-show="filterBulan || filterJenis || search" @click="filterBulan = ''; filterJenis = ''; search = ''" class="text-xs text-purple-400 hover:text-purple-300 px-2 py-1 bg-purple-900/20 rounded-lg border border-purple-500/30">Reset</button>
                     </div>
                 </div>
 
@@ -514,7 +515,6 @@
                 search: '',
                 filterJenis: '',
                 filterPetugas: '',
-                filterTanggal: '',
                 filterBulan: '',
                 loading: false,
                 loadingData: false,
@@ -967,16 +967,14 @@
                     return this.transactions.filter(t => {
                         const matchSearch = (t.nama || '').toLowerCase().includes(this.search.toLowerCase());
                         const matchJenis = this.filterJenis === '' || t.jenis === this.filterJenis;
-                        const matchPetugas = this.filterPetugas === '' || t.petugas === this.filterPetugas;
+                        
+                        // Diperbaiki agar aman dan tidak menyembunyikan data saat filter petugas kosong
+                        const matchPetugas = !this.filterPetugas || t.petugas === this.filterPetugas;
                         
                         const tDate = String(t.tanggalTransaksi || '').trim();
-                        const tMonth = tDate.substring(0, 7);
-                        const filterMonthClean = String(this.filterBulan || '').trim();
+                        let matchBulan = this.filterBulan ? tDate.includes(this.filterBulan) : true;
                         
-                        let matchBulan = filterMonthClean ? tMonth === filterMonthClean || tDate.includes(filterMonthClean) : true;
-                        let matchTanggal = this.filterTanggal ? tDate === String(this.filterTanggal).trim() : true;
-                        
-                        return matchSearch && matchJenis && matchPetugas && matchBulan && matchTanggal;
+                        return matchSearch && matchJenis && matchPetugas && matchBulan;
                     });
                 },
 
