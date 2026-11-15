@@ -731,12 +731,12 @@
                         let jiwa = Number(this.form.jumlahJiwa) || 0;
                         if (this.form.bentuk === 'Uang Tunai') {
                             this.form.nominal = jiwa * this.tarifFitrahUang;
-                            if (this.form.metodeBayar === 'Penyerahan Fisik (Beras)') {
+                            if (this.form.metodeBayar === 'Penyerahan Fisik') {
                                 this.form.metodeBayar = 'Tunai';
                             }
                         } else {
                             this.form.nominal = jiwa * this.tarifFitrahBeras;
-                            this.form.metodeBayar = 'Penyerahan Fisik (Beras)';
+                            this.form.metodeBayar = 'Penyerahan Fisik';
                         }
                     }
                 },
@@ -843,7 +843,7 @@
 
                     let metodeTampil = item.metodeBayar;
                     if (item.jenis === 'Zakat Fitrah' && item.bentuk === 'Beras' && (!metodeTampil || metodeTampil === 'Tunai')) {
-                        metodeTampil = 'Penyerahan Fisik (Beras)';
+                        metodeTampil = 'Penyerahan Fisik';
                     }
 
                     let pesan = `*Bismillah, Terima Kasih*\n\n` +
