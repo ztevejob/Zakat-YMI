@@ -593,20 +593,15 @@
 
                 playSuccessSound() {
                     try {
-                        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                        const osc = audioCtx.createOscillator();
-                        const gain = audioCtx.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-                        osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
-                        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-                        osc.connect(gain);
-                        gain.connect(audioCtx.destination);
-                        osc.start();
-                        osc.stop(audioCtx.currentTime + 0.4);
+                        if ('speechSynthesis' in window) {
+                            const utterance = new SpeechSynthesisUtterance('Terima kasih data entry sudah masuk');
+                            utterance.lang = 'id-ID';
+                            utterance.rate = 1.0;
+                            utterance.pitch = 1.0;
+                            window.speechSynthesis.speak(utterance);
+                        }
                     } catch (e) {
-                        console.log("Audio not supported", e);
+                        console.log("Speech synthesis not supported", e);
                     }
                 },
 
