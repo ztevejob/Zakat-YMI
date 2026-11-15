@@ -202,7 +202,12 @@
                         </select>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1">Tanggal Transaksi</label>
+                            <input type="date" x-model="form.tanggalTransaksi" required 
+                                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen text-slate-200">
+                        </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-300 mb-1">Nama Muzakki</label>
                             <input type="text" x-model="form.nama" required placeholder="Bapak Ahmad" 
@@ -227,13 +232,18 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">Metode Pembayaran</label>
-                            <select x-model="form.metodeBayar" 
-                                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen">
-                                <option value="Tunai">Tunai</option>
-                                <option value="Transfer Bank">Transfer Bank</option>
-                                <option value="QRIS">QRIS</option>
-                            </select>
+                            <label class="block text-xs font-medium text-slate-300 mb-1" x-text="form.jenis === 'Zakat Fitrah' && form.bentuk === 'Beras' ? 'Jenis Penyerahan' : 'Metode Pembayaran'"></label>
+                            <template x-if="!(form.jenis === 'Zakat Fitrah' && form.bentuk === 'Beras')">
+                                <select x-model="form.metodeBayar" 
+                                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-accentGreen">
+                                    <option value="Tunai">Tunai</option>
+                                    <option value="Transfer Bank">Transfer Bank</option>
+                                </select>
+                            </template>
+                            <template x-if="form.jenis === 'Zakat Fitrah' && form.bentuk === 'Beras'">
+                                <input type="text" value="Penyerahan Fisik (Beras)" readonly 
+                                    class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-2 text-sm text-amber-400 font-semibold focus:outline-none cursor-not-allowed">
+                            </template>
                         </div>
                     </div>
 
@@ -294,9 +304,13 @@
                     <h2 class="text-base md:text-lg font-bold flex items-center gap-2">
                         <i class="fa-solid fa-database text-cyan-400"></i> Tabel Data Server (Database)
                     </h2>
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <input type="month" x-model="filterBulan" title="Filter Berdasarkan Bulan" 
+                            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen text-slate-200">
+                        <input type="date" x-model="filterTanggal" title="Filter Tanggal Spesifik" 
+                            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen text-slate-200">
                         <input type="text" x-model="search" placeholder="Cari muzakki..." 
-                            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen w-full sm:w-48">
+                            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen w-full sm:w-36">
                         <select x-model="filterJenis" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen">
                             <option value="">Semua Jenis</option>
                             <option value="Zakat Fitrah">Zakat Fitrah</option>
@@ -304,6 +318,7 @@
                             <option value="Infak / Sedekah">Infak / Sedekah</option>
                             <option value="Fidyah">Fidyah</option>
                         </select>
+                        <button x-show="filterBulan || filterTanggal || filterJenis || search" @click="filterBulan = ''; filterTanggal = ''; filterJenis = ''; search = ''" class="text-xs text-purple-400 hover:text-purple-300 px-2 py-1 bg-purple-900/20 rounded-lg border border-purple-500/30">Reset</button>
                     </div>
                 </div>
 
@@ -311,7 +326,7 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-slate-800 text-[11px] text-slate-400 uppercase">
-                                <th class="py-3 px-3">Waktu (WIB)</th>
+                                <th class="py-3 px-3">Tgl Transaksi / Submit</th>
                                 <th class="py-3 px-3">Petugas</th>
                                 <th class="py-3 px-3">Muzakki</th>
                                 <th class="py-3 px-3">Jenis & Metode</th>
@@ -322,7 +337,10 @@
                         <tbody class="divide-y divide-slate-800/60 text-xs md:text-sm">
                             <template x-for="(item, index) in filteredTransactions" :key="index">
                                 <tr class="hover:bg-slate-800/40 transition">
-                                    <td class="py-3 px-3 text-[11px] text-slate-400" x-text="formatWIB(item.timestamp)"></td>
+                                    <td class="py-3 px-3 text-[11px]">
+                                    <div class="font-semibold text-emerald-400" x-text="formatTanggalDisplay(item.tanggalTransaksi)"></div>
+                                    <div class="text-[10px] text-slate-500" x-text="'Submit: ' + formatWIB(item.timestamp)"></div>
+                                </td>
                                     <td class="py-3 px-3 text-xs font-medium text-emerald-400" x-text="item.petugas"></td>
                                     <td class="py-3 px-3 font-medium">
                                         <div x-text="item.nama"></div>
@@ -482,7 +500,7 @@
 
     <!-- Alpine.js Logic -->
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyLwOK1bEk7ufmGHEtTOEX9xmcJq0Qmb7GEcSnt91TBrUQ_I14iZ_wMuP4jfDyuvgVC/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcMTPaJWJfIYLtTKYw2PBpFkiIs75-KLcKMeFGQ1fb7W9krOA5Giww4A38ODh3mw1j/exec";
 
         function zakatApp() {
             return {
@@ -491,6 +509,8 @@
                 search: '',
                 filterJenis: '',
                 filterPetugas: '',
+                filterTanggal: '',
+                filterBulan: '',
                 loading: false,
                 loadingData: false,
                 showForm: false, 
@@ -517,6 +537,7 @@
                     petugas: '',
                     nama: '',
                     phone: '',
+                    tanggalTransaksi: new Date().toISOString().split('T')[0],
                     metodeBayar: 'Tunai',
                     jenis: 'Zakat Fitrah',
                     bentuk: 'Uang Tunai',
@@ -675,8 +696,12 @@
                         let jiwa = Number(this.form.jumlahJiwa) || 0;
                         if (this.form.bentuk === 'Uang Tunai') {
                             this.form.nominal = jiwa * this.tarifFitrahUang;
+                            if (this.form.metodeBayar === 'Penyerahan Fisik (Beras)') {
+                                this.form.metodeBayar = 'Tunai';
+                            }
                         } else {
                             this.form.nominal = jiwa * this.tarifFitrahBeras;
+                            this.form.metodeBayar = 'Penyerahan Fisik (Beras)';
                         }
                     }
                 },
@@ -696,6 +721,7 @@
 
                     const payload = {
                         timestamp: timestampWIB,
+                        tanggalTransaksi: this.form.tanggalTransaksi,
                         nama: this.form.nama,
                         phone: this.form.phone || '-',
                         petugas: this.form.petugas,
@@ -723,6 +749,7 @@
                             petugas: currentPetugas,
                             nama: '',
                             phone: '',
+                            tanggalTransaksi: new Date().toISOString().split('T')[0],
                             metodeBayar: 'Tunai',
                             jenis: 'Zakat Fitrah',
                             bentuk: 'Uang Tunai',
@@ -746,11 +773,8 @@
 
                     const raw = String(timestamp).trim();
 
-                    // Pertahankan format WIB lama agar tidak dikonversi dua kali.
-                    if (/\\bWIB\\b/i.test(raw)) return raw;
+                    if (/\bWIB\b/i.test(raw)) return raw;
 
-                    // ISO timestamp berakhiran Z dibaca sebagai UTC,
-                    // lalu ditampilkan dalam zona waktu Asia/Jakarta (WIB).
                     const date = new Date(raw);
                     if (Number.isNaN(date.getTime())) return raw;
 
@@ -805,7 +829,6 @@
 
                     let waUrl = `https://api.whatsapp.com/send?phone=${phoneClean}&text=` + encodeURIComponent(pesan);
                     
-                    // Metode aman untuk iOS & Android agar tidak diblokir browser / popup blocker
                     let a = document.createElement('a');
                     a.href = waUrl;
                     a.target = '_blank';
@@ -929,12 +952,30 @@
                         .reduce((sum, t) => sum + (Number(t.nominal) || 0), 0);
                 },
 
+                formatTanggalDisplay(dateStr) {
+                    if (!dateStr) return '-';
+                    let clean = String(dateStr).trim();
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+                        let parts = clean.split('-');
+                        let y = parts[0], m = parseInt(parts[1], 10), d = parts[2];
+                        let monthsId = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                        return `${d} ${monthsId[m] || ''} ${y}`;
+                    }
+                    return clean;
+                },
+
                 get filteredTransactions() {
                     return this.transactions.filter(t => {
                         const matchSearch = (t.nama || '').toLowerCase().includes(this.search.toLowerCase());
                         const matchJenis = this.filterJenis === '' || t.jenis === this.filterJenis;
                         const matchPetugas = this.filterPetugas === '' || t.petugas === this.filterPetugas;
-                        return matchSearch && matchJenis && matchPetugas;
+                        
+                        const tDate = String(t.tanggalTransaksi || '').trim();
+                        
+                        let matchBulan = this.filterBulan ? tDate.startsWith(this.filterBulan) : true;
+                        let matchTanggal = this.filterTanggal ? tDate === String(this.filterTanggal).trim() : true;
+                        
+                        return matchSearch && matchJenis && matchPetugas && matchBulan && matchTanggal;
                     });
                 },
 
@@ -945,7 +986,8 @@
                     }
 
                     let dataExcel = this.transactions.map(t => ({
-                        "Timestamp": this.formatWIB(t.timestamp),
+                        "Tanggal Transaksi": t.tanggalTransaksi || '-',
+                        "Waktu Submit": this.formatWIB(t.timestamp),
                         "Nama Muzakki": t.nama,
                         "No Telepon": t.phone,
                         "Petugas Amil": t.petugas,
