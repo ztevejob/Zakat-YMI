@@ -297,46 +297,71 @@
             </div>
         </section>
 
-        <!-- TAB 3: TABEL DATABASE SERVER -->
+        <!-- TAB 3: TABEL DATABASE SERVER (Filter Langsung di Header Kolom) -->
         <section x-show="currentTab === 'table'" x-transition class="space-y-6">
             <div class="bg-cardBg border border-slate-800 p-5 md:p-6 rounded-2xl shadow-xl flex flex-col">
                 <div class="flex flex-col sm:flex-row justify-between items-center gap-4 mb-4 border-b border-slate-800 pb-3">
                     <h2 class="text-base md:text-lg font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-database text-cyan-400"></i> Tabel Data Server (Database)
+                        <i class="fa-solid fa-database text-cyan-400"></i> Tabel Data Server (Filter Kolom Langsung)
                     </h2>
-                    <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                        <!-- Dropdown Filter Bulan Saja -->
-                        <input type="month" x-model="filterBulan" title="Filter Berdasarkan Bulan" 
-                            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen text-slate-200">
-                        <!-- Pencarian Muzakki -->
-                        <input type="text" x-model="search" placeholder="Cari muzakki..." 
-                            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen w-full sm:w-40">
-                        <!-- Filter Jenis Dana -->
-                        <select x-model="filterJenis" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-accentGreen">
-                            <option value="">Semua Jenis</option>
-                            <option value="Zakat Fitrah">Zakat Fitrah</option>
-                            <option value="Zakat Mal">Zakat Mal</option>
-                            <option value="Infak / Sedekah">Infak / Sedekah</option>
-                            <option value="Fidyah">Fidyah</option>
-                        </select>
-                        <button x-show="filterBulan || filterJenis || search" @click="filterBulan = ''; filterJenis = ''; search = ''" class="text-xs text-purple-400 hover:text-purple-300 px-2 py-1 bg-purple-900/20 rounded-lg border border-purple-500/30">Reset</button>
+                    <div class="flex items-center gap-2">
+                        <button x-show="colFilter.tanggal || colFilter.nama || colFilter.petugas || colFilter.jenis || colFilter.keterangan" 
+                            @click="colFilter = {tanggal: '', nama: '', petugas: '', jenis: '', keterangan: ''}" 
+                            class="text-xs text-purple-400 hover:text-purple-300 px-3 py-1.5 bg-purple-900/20 rounded-xl border border-purple-500/30">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> Reset Filter Kolom
+                        </button>
+                        <span class="text-xs text-slate-400" x-text="'Ditampilkan: ' + filteredTransactions.length + ' baris'"></span>
                     </div>
                 </div>
 
                 <div class="overflow-x-auto flex-1">
-                    <table class="w-full text-left border-collapse min-w-[950px]">
+                    <table class="w-full text-left border-collapse min-w-[1050px]">
                         <thead>
                             <tr class="border-b border-slate-800 text-[11px] text-slate-400 uppercase">
-                                <th class="py-3 px-2">Timestamp</th>
-                                <th class="py-3 px-2">Tanggal Transaksi</th>
-                                <th class="py-3 px-2">Muzakki & Telp</th>
-                                <th class="py-3 px-2">Petugas Amil</th>
-                                <th class="py-3 px-2">Jenis Dana</th>
-                                <th class="py-3 px-2">Metode & Bentuk</th>
-                                <th class="py-3 px-2">Jiwa</th>
-                                <th class="py-3 px-2">Nominal / Berat</th>
-                                <th class="py-3 px-2">Keterangan</th>
-                                <th class="py-3 px-2 text-center">Aksi (WA & PDF)</th>
+                                <th class="py-2 px-2">Timestamp</th>
+                                <th class="py-2 px-2">Tanggal Transaksi</th>
+                                <th class="py-2 px-2">Muzakki & Telp</th>
+                                <th class="py-2 px-2">Petugas Amil</th>
+                                <th class="py-2 px-2">Jenis Dana</th>
+                                <th class="py-2 px-2">Metode & Bentuk</th>
+                                <th class="py-2 px-2">Jiwa</th>
+                                <th class="py-2 px-2">Nominal / Berat</th>
+                                <th class="py-2 px-2">Keterangan</th>
+                                <th class="py-2 px-2 text-center">Aksi (WA & PDF)</th>
+                            </tr>
+                            <!-- Baris Input Filter Langsung di Bawah Header -->
+                            <tr class="border-b border-slate-700 bg-slate-950/60">
+                                <th class="py-2 px-2 text-[10px] text-slate-500">-</th>
+                                <th class="py-2 px-2">
+                                    <input type="text" x-model="colFilter.tanggal" placeholder="Cari tgl..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-accentGreen">
+                                </th>
+                                <th class="py-2 px-2">
+                                    <input type="text" x-model="colFilter.nama" placeholder="Cari nama..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-accentGreen">
+                                </th>
+                                <th class="py-2 px-2">
+                                    <select x-model="colFilter.petugas" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-accentGreen">
+                                        <option value="">Semua Petugas</option>
+                                        <template x-for="p in listPetugasAmil" :key="p">
+                                            <option :value="p" x-text="p"></option>
+                                        </template>
+                                    </select>
+                                </th>
+                                <th class="py-2 px-2">
+                                    <select x-model="colFilter.jenis" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-accentGreen">
+                                        <option value="">Semua Jenis</option>
+                                        <option value="Zakat Fitrah">Zakat Fitrah</option>
+                                        <option value="Zakat Mal">Zakat Mal</option>
+                                        <option value="Infak / Sedekah">Infak / Sedekah</option>
+                                        <option value="Fidyah">Fidyah</option>
+                                    </select>
+                                </th>
+                                <th class="py-2 px-2 text-[10px] text-slate-500">-</th>
+                                <th class="py-2 px-2 text-[10px] text-slate-500">-</th>
+                                <th class="py-2 px-2 text-[10px] text-slate-500">-</th>
+                                <th class="py-2 px-2">
+                                    <input type="text" x-model="colFilter.keterangan" placeholder="Cari ket..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-accentGreen">
+                                </th>
+                                <th class="py-2 px-2 text-center text-[10px] text-slate-500">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-800/60 text-xs md:text-sm">
@@ -371,7 +396,7 @@
                             </template>
                             <template x-if="filteredTransactions.length === 0">
                                 <tr>
-                                    <td colspan="10" class="text-center py-8 text-slate-500 text-xs md:text-sm" x-text="loadingData ? 'Memuat data dari server...' : 'Belum ada data pada server.'"></td>
+                                    <td colspan="10" class="text-center py-8 text-slate-500 text-xs md:text-sm" x-text="loadingData ? 'Memuat data dari server...' : 'Tidak ada data yang cocok dengan filter kolom.'"></td>
                                 </tr>
                             </template>
                         </tbody>
@@ -512,10 +537,7 @@
             return {
                 currentTab: 'summary',
                 transactions: [],
-                search: '',
-                filterJenis: '',
                 filterPetugas: '',
-                filterBulan: '',
                 loading: false,
                 loadingData: false,
                 showForm: false, 
@@ -525,6 +547,15 @@
                 activePrayer: '-',
                 countdownTimer: '--:--',
                 formattedCurrentDate: '',
+
+                // State Filter Kolom Tabel
+                colFilter: {
+                    tanggal: '',
+                    nama: '',
+                    petugas: '',
+                    jenis: '',
+                    keterangan: ''
+                },
 
                 listPetugasAmil: [
                     "Ust. Ahmad",
@@ -965,16 +996,15 @@
 
                 get filteredTransactions() {
                     return this.transactions.filter(t => {
-                        const matchSearch = (t.nama || '').toLowerCase().includes(this.search.toLowerCase());
-                        const matchJenis = this.filterJenis === '' || t.jenis === this.filterJenis;
+                        const matchPetugasGlobal = !this.filterPetugas || t.petugas === this.filterPetugas;
+
+                        const matchTgl = !this.colFilter.tanggal || String(t.tanggalTransaksi || '').toLowerCase().includes(this.colFilter.tanggal.toLowerCase());
+                        const matchNama = !this.colFilter.nama || String(t.nama || '').toLowerCase().includes(this.colFilter.nama.toLowerCase());
+                        const matchPetugasCol = !this.colFilter.petugas || t.petugas === this.colFilter.petugas;
+                        const matchJenis = !this.colFilter.jenis || t.jenis === this.colFilter.jenis;
+                        const matchKet = !this.colFilter.keterangan || String(t.keterangan || '').toLowerCase().includes(this.colFilter.keterangan.toLowerCase());
                         
-                        // Diperbaiki agar aman dan tidak menyembunyikan data saat filter petugas kosong
-                        const matchPetugas = !this.filterPetugas || t.petugas === this.filterPetugas;
-                        
-                        const tDate = String(t.tanggalTransaksi || '').trim();
-                        let matchBulan = this.filterBulan ? tDate.includes(this.filterBulan) : true;
-                        
-                        return matchSearch && matchJenis && matchPetugas && matchBulan;
+                        return matchPetugasGlobal && matchTgl && matchNama && matchPetugasCol && matchJenis && matchKet;
                     });
                 },
 
